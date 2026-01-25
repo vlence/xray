@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="application-name" content="Xray | Inspect the binary contents of files" />
+    <title>Xray | Inspect the binary contents of files</title>
+
+    <script src="renderers/binary.js"></script>
+    <script src="renderers/text.js"></script>
+    <script src="renderers/preview.js"></script>
+    <script src="renderers/img.js"></script>
+    <script src="renderers/hls.js"></script>
+    <script src="renderers/video.js"></script>
+    <script src="renderers/pdf.js"></script>
+    <script src="renderers/jpeg.js"></script>
+    <script src="renderers/dash.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0px;
+        }
+
+        .views {
+            max-width: 100vw;
+            display: flex;
+            flex-direction: row;
+        }
+
+        .views .view {
+            max-width: 50%;
+        }
+
+        .views .preview {
+            margin-left: 4em;
+            flex-grow: 1;
+            text-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Xray</h1>
+
+    <p>Inspect the binary contents of files.</p>
+
+    <main>
+        <div>
+            <form id="urlform">
+                <label>
+                    File URL
+                    <input name="url" type="url" placeholder="https://www.example.com/image.jpg" required />
+                    <button type="submit">Analyse URL</button>
+                    <br>
+                    <small>If you get a CORS error use a cors proxy like <a href="https://corsproxy.io" target="_blank">corsproxy.io</a></small>
+                </label>
+            </form>
+            <div>OR</div>
+            <form id="fileform">
+                <label>
+                    Local File
+                    <input name="file" type="file" required />
+                </label>
+                <button type="submit">Analyse Local File</button>
+            </form>
+        </div>
+
+        <div class="views">
+            <section class="binary">
+                <h1>Binary</h1>
+                <div class="view"></div>
+            </section>
+            <section class="preview">
+                <h1>Preview</h1>
+                <div class="view"></div>
+            </section>
+        </div>
+    </main>
+    <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "@vlence/xray",
+  "version": "0.0.1",
+  "description": "A simple tool to inspect the binary contents of files",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 1313"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,3 +1,7 @@
+import TextRenderer from './renderers/text/plain.mjs'
+import BinaryRenderer from './renderers/application/octet-stream.mjs'
+import PreviewRenderer from './renderers/preview.mjs'
+
 document.addEventListener('DOMContentLoaded', main)
 
 function main() {
@@ -17,22 +21,9 @@ function main() {
     const binaryRenderer = new BinaryRenderer()
     const previewRenderer = new PreviewRenderer()
     const textRenderer = new TextRenderer()
-    const imgRenderer = new ImageRenderer()
-    const hlsRenderer = new HlsRenderer()
-    const videoRenderer = new VideoRenderer()
-    const pdfRenderer = new PdfRenderer()
-    const jpegRenderer = new JpegRenderer()
-    const dashRenderer = new DashRenderer()
 
     previewRenderer.registerFallback(textRenderer)
     previewRenderer.register(textRenderer, 'text')
-    previewRenderer.register(imgRenderer, 'image')
-    previewRenderer.register(videoRenderer, 'video')
-    previewRenderer.register(hlsRenderer, 'application/vnd.apple.mpegurl')
-    previewRenderer.register(hlsRenderer, 'application/x-mpegurl')
-    previewRenderer.register(pdfRenderer, 'application/pdf')
-    previewRenderer.register(jpegRenderer, 'image/jpeg')
-    previewRenderer.register(dashRenderer, 'application/dash+xml')
 
     urlform.onsubmit = async (ev) => {
         ev.preventDefault()

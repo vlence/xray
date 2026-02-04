@@ -1,4 +1,4 @@
-class PreviewRenderer {
+export default class PreviewRenderer {
     /** @type {{[mime: string]: Renderer}} */
     #renderers = {}
 
@@ -103,5 +103,3 @@ class PreviewRenderer {
  * @typedef {Object} Renderer
  * @prop {Function} render
  */
-
-console.info('preview renderer loaded')

@@ -4,7 +4,7 @@
   "description": "A simple tool to inspect the binary contents of files",
   "main": "index.html",
   "scripts": {
-    "start": "python3 -m http.server 1313"
+    "start": "python3 -m http.server"
   },
   "keywords": [],
   "author": "",

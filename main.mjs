@@ -1,11 +1,11 @@
-import TextRenderer from './renderers/text/plain.mjs'
-import BinaryRenderer from './renderers/application/octet-stream.mjs'
-import PreviewRenderer from './renderers/preview.mjs'
+import Renderer from './views/renderer.mjs'
+
+const log = console
 
 document.addEventListener('DOMContentLoaded', main)
 
-function main() {
-    console.info('dom content loaded')
+async function main() {
+    log.info('dom content loaded')
 
     /** @type {HTMLFormElement} */
     const urlform = document.querySelector('#urlform')
@@ -15,68 +15,31 @@ function main() {
 
     urlform.url.value = window.location.toString()
 
-    const binaryViewParent = document.querySelector('.views .binary')
-    const previewViewParent = document.querySelector('.views .preview')
+    const octetStreamHost = document.querySelector('.hosts .hex .host')
+    const previewHost = document.querySelector('.hosts .preview .host')
 
-    const binaryRenderer = new BinaryRenderer()
-    const previewRenderer = new PreviewRenderer()
-    const textRenderer = new TextRenderer()
+    const app = new App(octetStreamHost, previewHost)
 
-    previewRenderer.registerFallback(textRenderer)
-    previewRenderer.register(textRenderer, 'text')
+    await app.init()
 
     urlform.onsubmit = async (ev) => {
         ev.preventDefault()
-        console.info('url form submitted')
 
         const url = urlform.url.value
-
-        console.info('Fetching', url)
         const response = await fetch(url)
 
-        console.info('Fetched', url)
         const headers = response.headers
         const contentType = headers.get('content-type')
 
-        // const bodyReader = response.body.getReader()
-
-        // const pump = async () => {
-        //     const { done, value } = await bodyReader.read()
-
-        //     if (done) {
-        //         console.debug('done')
-        //         bodyReader.releaseLock()
-        //     }
-
-        //     if (!done) {
-        //         console.debug('chunk', value)
-        //         pump()
-        //     }
-        // }
-
-        // pump()
-
-        const buf = await response.arrayBuffer()
-        const size = buf.byteLength
         let mime = 'text/plain'
-        let name = ''
-        
+
         if (contentType) {
             const semicolonpos = contentType.indexOf(';')
             const hasExtraInfo = semicolonpos != -1
             mime = hasExtraInfo ? contentType.substring(0, semicolonpos) : contentType
         }
 
-        console.time('binary render')
-        const newBinaryView = binaryRenderer.render(buf)
-        console.timeEnd('binary render')
-
-        newBinaryView.classList.add('view')
-        binaryViewParent.querySelector('.view').replaceWith(newBinaryView)
-
-        const preview = previewRenderer.render(buf, mime, { url })
-        preview.classList.add('view')
-        previewViewParent.querySelector('.view').replaceWith(preview)
+        app.render(response.body, mime)
     }
 
     fileform.onsubmit = async (ev) => {
@@ -84,24 +47,127 @@ function main() {
 
         /** @type {File} */
         const file = fileform.file.files[0]
-
-        console.info('file uploaded', file.name)
-
-        const buf = await file.arrayBuffer()
-        const url = URL.createObjectURL(new Blob([buf], { type: file.type })) 
-        const size = buf.byteLength
         const mime = file.type || 'text/plain'
-        const name = file.name
 
-        console.time('binary render')
-        const newBinaryView = binaryRenderer.render(buf)
-        console.timeEnd('binary render')
+        app.render(file.stream(), mime)
+    }
+}
 
-        newBinaryView.classList.add('view')
-        binaryViewParent.querySelector('.view').replaceWith(newBinaryView)
+class App {
+    /** @type {HTMLElement} */
+    #octetStreamHost
 
-        const preview = previewRenderer.render(buf, mime, { url })
-        preview.classList.add('view')
-        previewViewParent.querySelector('.view').replaceWith(preview)
+    /** @type {HTMLElement} */
+    #previewHost
+
+    /** @type {HTMLElement} */
+    #currentPreviewNode
+
+    /** @type {RendererRegistry} */
+    #registry
+
+    constructor(ohost, phost) {
+        this.#octetStreamHost = ohost
+        this.#previewHost = phost
+
+        this.#registry = new RendererRegistry('./views')
+    }
+
+    /**
+     * @param {ReadableStream<Uint8Array<ArrayBuffer>>} stream
+     * @param {string} mime
+     */
+    async render(stream, mime) {
+        if (!(stream instanceof ReadableStream)) {
+            throw new TypeError('stream must be ReadableStream')
+        }
+
+        if (typeof mime != 'string') {
+            throw new TypeError('mime must be string')
+        }
+
+        const registry = this.#registry
+        const [octetStream, noPreview, renderer] = await Promise.all([
+            registry.get('application/octet-stream'),
+            registry.get('nopreview'),
+            registry.get(mime),
+        ])
+
+        const [stream1, stream2] = stream.tee()
+
+        octetStream.render(stream1)
+
+        requestAnimationFrame(() => {
+            /** @type {HTMLElement} */
+            let node
+
+            this.#currentPreviewNode.remove()
+
+            if (!renderer) {
+                node = noPreview.render(stream2)
+            }
+            else {
+                node = renderer.render(stream2)
+            }
+
+            this.#currentPreviewNode = node
+            this.#previewHost.appendChild(node)
+        })
+    }
+
+    /**
+     * Initialises the octet stream renderer and
+     * no-preview renderer. This method MUST be
+     * called before the first call to render().
+     */
+    async init() {
+        const registry = this.#registry
+        const [octetStream, noPreview] = await Promise.all([
+            registry.get('application/octet-stream'),
+            registry.get('nopreview'),
+        ])
+
+        this.#octetStreamHost.appendChild(octetStream.render())
+        this.#currentPreviewNode = noPreview.render()
+        this.#previewHost.appendChild(this.#currentPreviewNode)
+    }
+}
+
+class RendererRegistry {
+    /** @type {string} */
+    basePath
+
+    /** @type {{[key: string]: Renderer}} */
+    renderers = {}
+
+    constructor(basePath) {
+        this.basePath = basePath
+    }
+
+    /**
+     * @param {string} mime The MIME type that the renderer renders
+     *
+     * @returns {Promise<Renderer>}
+     */
+    async get(mime) {
+        let renderer = this.renderers[mime]
+
+        if (!renderer) {
+            const modulePath = `${this.basePath}/${mime}.mjs`
+
+            try {
+                log.info('loading renderer', modulePath)
+                const module = await import(modulePath)
+                log.debug('loaded renderer', mime, module)
+                const RendererClass = module.default
+                renderer = new RendererClass()
+                this.renderers[mime] = renderer
+            }
+            catch (err) {
+                log.warn('failed to load renderer', modulePath, err)
+            }
+        }
+
+        return renderer
     }
 }

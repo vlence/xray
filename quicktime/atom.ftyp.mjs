@@ -1,6 +1,7 @@
 import ByteReader from '../utils/bytereader.mjs'
 import * as textDecoders from '../utils/textdecoder.mjs'
 import Atom from './atom.mjs'
+import AtomScanner from './atom.scanner.mjs'
 
 /**
  * The ftyp atom.
@@ -38,12 +39,13 @@ export default class FtypAtom extends Atom {
 }
 
 /**
- * Parses an ftyp atom using the given byte reader.
+ * Parses an ftyp atom's data.
  *
  * @param {ByteReader} reader
  * @param {Atom} atomTemplate
+ * @param {AtomScanner} scanner
  */
-export async function FtypAtomParser(reader, atomTemplate) {
+export async function ftypAtomParser(reader, atomTemplate, scanner) {
     const atom = new FtypAtom()
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type

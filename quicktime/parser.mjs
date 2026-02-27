@@ -1,5 +1,4 @@
 import { FtypAtomParser } from './atom.ftyp.mjs'
-import { MdatAtomParser } from './atom.mdat.mjs'
 import { MoovAtomParser } from './atom.moov.mjs'
 import AtomScanner from './atom.scanner.mjs'
 
@@ -19,7 +18,6 @@ export default class QuickTimeParser extends AtomScanner {
         super(stream)
 
         this.defineParser('ftyp', FtypAtomParser)
-        this.defineParser('mdat', MdatAtomParser)
         this.defineParser('moov', MoovAtomParser)
     }
 }

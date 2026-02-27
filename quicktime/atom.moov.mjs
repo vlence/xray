@@ -49,7 +49,6 @@ export default class MoovAtom extends Atom {
  */
 export async function MoovAtomParser(reader, atomTemplate, scanner) {
     const atom = new MoovAtom()
-    const scan = scanner.scanner()
 
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type
@@ -57,9 +56,20 @@ export async function MoovAtomParser(reader, atomTemplate, scanner) {
 
     let bytesRemaining = atom.size - 8
 
-    while (bytesRemaining > 0) {
-        let nextAtom = await scan.next().then(res => res.value)
+    if (bytesRemaining > 0) {
+        return atom
+    }
+
+    for await (const nextAtom of scanner) {
         bytesRemaining -= nextAtom.size
+
+        if (bytesRemaining < 0) {
+            throw new RangeError('moov: read more than ' + atom.getDataSize() + ' bytes')
+        }
+
+        if (bytesRemaining == 0) {
+            break
+        }
     }
 
     return atom

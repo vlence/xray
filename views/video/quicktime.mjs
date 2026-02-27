@@ -78,12 +78,10 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {ReadableStream<Uint8Array<ArrayBuffer>>} stream
      */
     async #parse(stream) {
-        const parser = new QuickTimeParser()
+        const scanner = new QuickTimeParser(stream)
         const atoms = []
 
-        parser.init(stream)
-
-        for await (const atom of parser.scanner()) {
+        for await (const atom of scanner) {
             log.debug(atom.getTypeString(), atom.extendedSize || atom.size)
             atoms.push(atom)
         }

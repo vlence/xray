@@ -20,7 +20,7 @@ const log = console
  *
  * To provide parsers for specific atoms call defineParser().
  */
-export default class AtomDecoder {
+export default class AtomScanner {
     /**
      * @type {Map<number, AtomDecoder>}
      */
@@ -32,24 +32,10 @@ export default class AtomDecoder {
     #reader
 
     /**
-     * @param {ReadableStream<Uint8Array<ArrayBuffer>>} type
+     * @param {ReadableStream<Uint8Array<Array>>} stream
      */
-    #validateType(type) {
-        if (!(type instanceof Uint8Array)) {
-            throw new TypeError('type must be Uint8Array')
-        }
-
-        if (type.byteLength != 4) {
-            throw new RangeError('type must be exactly 4 bytes')
-        }
-    }
-
-    /**
-     * @param {ReadableStream<Uint8Array<ArrayBuffer>>} type
-     */
-    #typeToNumber(type) {
-        this.#validateType(type)
-        return new DataView(type.buffer).getUint32()
+    constructor(stream) {
+        this.#reader = new ByteReader(stream)
     }
 
     /**
@@ -76,23 +62,8 @@ export default class AtomDecoder {
         this.#parsers.set(this.#typeToNumber(type), parser)
     }
 
-    /**
-     * @param {ReadableStream<Uint8Array<Array>>} stream
-     */
-    init(stream) {
-        this.#reader = new ByteReader(stream)
-    }
-
-    async *scanner() {
+    async *[Symbol.asyncIterator]() {
         const reader = this.#reader
-
-        if (!reader) {
-            throw new Error('reader not initialised; call init()')
-        }
-
-        if (reader.done()) {
-            return
-        }
 
         while (!reader.done()) {
             let atom = new Atom()
@@ -131,6 +102,27 @@ export default class AtomDecoder {
 
             yield atom
         }
+    }
+
+    /**
+     * @param {ReadableStream<Uint8Array<ArrayBuffer>>} type
+     */
+    #validateType(type) {
+        if (!(type instanceof Uint8Array)) {
+            throw new TypeError('type must be Uint8Array')
+        }
+
+        if (type.byteLength != 4) {
+            throw new RangeError('type must be exactly 4 bytes')
+        }
+    }
+
+    /**
+     * @param {ReadableStream<Uint8Array<ArrayBuffer>>} type
+     */
+    #typeToNumber(type) {
+        this.#validateType(type)
+        return new DataView(type.buffer).getUint32()
     }
 }
 

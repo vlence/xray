@@ -1,5 +1,8 @@
+const log = console
+
 /**
- * Reader to read a stream in bytes.
+ * Reader that can read or skip bytes from 
+ * a ReadableStream.
  */
 export default class ByteReader {
     /** @type {boolean} */
@@ -102,10 +105,14 @@ export default class ByteReader {
     /**
      * Read len bytes and discard them.
      *
-     * @param {number} len The number of bytes to skip.
+     * @param {number|bigint} len The number of bytes to skip.
      */
     async skipBytes(len) {
-        if (typeof len != 'number' || isNaN(len) || len <= 0) {
+        const isNumber = typeof len == 'number'
+        const isBigInt = typeof len == 'bigint'
+        const negative = isNumber && len <= 0 || isBigInt && len <= 0n
+
+        if (isNaN(len) || negative) {
             return
         }
 
@@ -117,9 +124,23 @@ export default class ByteReader {
             throw new TypeError('reader is undefined')
         }
 
+        if (typeof len == 'number') {
+            await this.#skipBytesNumber(len)
+        }
+        else {
+            await this.#skipBytesBigInt(len)
+        }
+    }
+
+    /**
+     * Implementation of skipBytes where len is a number.
+     *
+     * @param {number} len
+     */
+    async #skipBytesNumber(len) {
         while (len > 0 && !this.#done) {
             if (len < this.#chunk.byteLength) {
-                this.#chunk = this.#chunk.slice(len)
+                this.#chunk = this.#chunk.subarray(len)
                 len = 0
             }
             else if (len == this.#chunk.byteLength) {
@@ -134,6 +155,31 @@ export default class ByteReader {
                 const {done, value: chunk} = await this.#reader.read()
                 this.#done = done
                 this.#chunk = chunk
+            }
+        }
+    }
+
+    /**
+     * Implementation of skipBytes where len is a bigint.
+     *
+     * @param {bigint} len
+     */
+    async #skipBytesBigInt(len) {
+        const maxUint32 = 0xffffffff
+        const maxUint32BigInt = BigInt(maxUint32)
+
+        while (len > 0n && !this.#done) {
+            if (len > maxUint32BigInt) {
+                this.#skipBytesNumber(maxUint32)
+                len -= maxUint32BigInt
+            }
+            else if (len == maxUint32BigInt) {
+                this.#skipBytesNumber(maxUint32)
+                len = 0n
+            }
+            else {
+                this.#skipBytesNumber(Number(len))
+                len = 0n
             }
         }
     }

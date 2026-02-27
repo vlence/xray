@@ -5,8 +5,6 @@ const log = console
 document.addEventListener('DOMContentLoaded', main)
 
 async function main() {
-    log.info('dom content loaded')
-
     /** @type {HTMLFormElement} */
     const urlform = document.querySelector('#urlform')
 
@@ -49,7 +47,7 @@ async function main() {
         const file = fileform.file.files[0]
         const mime = file.type || 'text/plain'
 
-        app.render(file.stream(), mime)
+        app.render(file, mime)
     }
 }
 
@@ -74,14 +72,10 @@ class App {
     }
 
     /**
-     * @param {ReadableStream<Uint8Array<ArrayBuffer>>} stream
+     * @param {ReadableStream<Uint8Array<ArrayBuffer>>|Blob} blobOrStream
      * @param {string} mime
      */
-    async render(stream, mime) {
-        if (!(stream instanceof ReadableStream)) {
-            throw new TypeError('stream must be ReadableStream')
-        }
-
+    async render(blobOrStream, mime) {
         if (typeof mime != 'string') {
             throw new TypeError('mime must be string')
         }
@@ -93,7 +87,17 @@ class App {
             registry.get(mime),
         ])
 
-        const [stream1, stream2] = stream.tee()
+        let stream1, stream2
+
+        if (blobOrStream instanceof Blob) {
+            stream1 = stream2 = blobOrStream
+        }
+        else if (blobOrStream instanceof ReadableStream) {
+            [stream1, stream2] = blobOrStream.tee()
+        }
+        else {
+            throw new TypeError('blobOrStream must be ReadableStream or Blob')
+        }
 
         octetStream.render(stream1)
 
@@ -156,7 +160,7 @@ class RendererRegistry {
             const modulePath = `${this.basePath}/${mime}.mjs`
 
             try {
-                log.info('loading renderer', modulePath)
+                log.debug('loading renderer', modulePath)
                 const module = await import(modulePath)
                 log.debug('loaded renderer', mime, module)
                 const RendererClass = module.default

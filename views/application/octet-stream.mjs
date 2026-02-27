@@ -1,5 +1,6 @@
 import Renderer from '../renderer.mjs'
 import ByteReader from '../../utils/bytereader.mjs'
+import * as textDecoders from '../../utils/textdecoder.mjs'
 
 const log = console
 
@@ -153,16 +154,25 @@ export default class BinaryRenderer extends Renderer {
             const children = row.children
 
             for (const child of children) {
-                child.textContent = ''
+                child.innerHTML = ''
             }
         }
     }
 
     /**
-     * @param {ReadableStream<Uint8Array<ArrayBuffer>>}
+     * @param {ReadableStream<Uint8Array<ArrayBuffer>>|Blob} blobOrStream
      */
-    render(stream) {
-        if (stream instanceof ReadableStream) {
+    render(blobOrStream) {
+        let stream
+
+        if (blobOrStream instanceof Blob) {
+            stream = blobOrStream.stream()
+        }
+        else if (blobOrStream instanceof ReadableStream) {
+            stream = blobOrStream
+        }
+
+        if (stream) {
             const reader = new ByteReader(stream)
             const bytesPerPage = this.#bytesPerRow * this.#rowsPerPage
 
@@ -190,6 +200,8 @@ export default class BinaryRenderer extends Renderer {
     #renderPage(idx) {
         this.#clearRows()
 
+        const ascii = textDecoders.get('ascii')
+
         /** @type {NodeList} */
         const rows = this.#container.querySelectorAll('tr.data')
         const page = this.#pages[idx]
@@ -206,11 +218,20 @@ export default class BinaryRenderer extends Renderer {
             const bytes16 = page.subarray(byteIdx, byteIdx+bytesPerRow)
 
             const th = row.querySelector('th')
-            th.innerText = addr.toString(16).padStart(8, '0').toUpperCase()
+            th.innerHTML = '<br>' + addr.toString(16).padStart(8, '0').toUpperCase()
 
             for (let i = 0; i < bytes16.byteLength; i++) {
                 const td = row.querySelector('td.x' + i.toString(16).toUpperCase())
-                td.innerText = bytes16[i].toString(16).padStart(2, '0')
+                const byte = bytes16[i]
+
+                let ch = ascii.decode(bytes16.subarray(i, i+1))
+                const hex = byte.toString(16).padStart(2, '0')
+
+                if (byte <= 32 || byte >= 127) {
+                    ch = ''
+                }
+
+                td.innerHTML = `${ch}<br>${hex}`
             }
         }
     }

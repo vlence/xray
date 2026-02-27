@@ -12,11 +12,11 @@ export default class Renderer {
      *
      * @abstract
      *
-     * @param {ReadableStream<Uint8Array<ArrayBuffer>>} stream
+     * @param {ReadableStream<Uint8Array<ArrayBuffer>>|Blob} blobOrStream
      *
      * @returns {Node}
      */
-    render(stream) {
+    render(blobOrStream) {
     }
 
     /**
@@ -24,6 +24,8 @@ export default class Renderer {
      *
      * The node returned by `render()` is removed from the
      * document after `unmount()` is called.
+     *
+     * @abstract
      */
     unmount() {
     }

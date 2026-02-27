@@ -82,7 +82,7 @@ export default class QuickTimeRenderer extends Renderer {
         const atoms = []
 
         for await (const atom of scanner) {
-            log.debug(atom.getTypeString(), atom.extendedSize || atom.size)
+            log.debug(atom)
             atoms.push(atom)
         }
     }

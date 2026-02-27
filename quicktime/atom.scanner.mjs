@@ -85,18 +85,17 @@ export default class AtomScanner {
             let parse = this.#parsers.get(this.#typeToNumber(atom.type))
 
             if (parse) {
-                log.debug('parsing', atom.extendedSize || atom.size, 'bytes of atom', atom.getTypeString(), atom.type)
+                log.info(`${atom.getTypeString()} [${atom.type.toString()}]: parsing ${atom.extendedSize || atom.size} bytes`)
                 atom = await parse(reader, atom, this)
             }
             else {
-                log.debug('no parser found for atom', atom.getTypeString(), atom.type)
                 let skip = atom.size - 8
 
                 if (atom.usesExtendedSize()) {
                     skip = atom.extendedSize - 16n
                 }
 
-                log.debug('skipping next', skip, 'bytes')
+                log.info(`${atom.getTypeString()} [${atom.type.toString()}]: no parser found; skipping ${skip} bytes`)
                 await reader.skipBytes(skip)
             }
 

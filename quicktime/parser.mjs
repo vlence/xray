@@ -1,6 +1,8 @@
-import { FtypAtomParser } from './atom.ftyp.mjs'
-import { MoovAtomParser } from './atom.moov.mjs'
 import AtomScanner from './atom.scanner.mjs'
+import { ftypAtomParser } from './atom.ftyp.mjs'
+import { moovAtomParser } from './atom.moov.mjs'
+import { mvhdAtomParser } from './atom.mvhd.mjs'
+import { trackAtomParser } from './atom.trak.mjs'
 
 const log = console
 
@@ -17,7 +19,9 @@ export default class QuickTimeParser extends AtomScanner {
     constructor(stream) {
         super(stream)
 
-        this.defineParser('ftyp', FtypAtomParser)
-        this.defineParser('moov', MoovAtomParser)
+        this.defineParser('ftyp', ftypAtomParser)
+        this.defineParser('moov', moovAtomParser)
+        this.defineParser('mvhd', mvhdAtomParser)
+        this.defineParser('trak', trackAtomParser)
     }
 }

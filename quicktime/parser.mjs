@@ -4,6 +4,7 @@ import { moovAtomParser } from './atom.moov.mjs'
 import { mvhdAtomParser } from './atom.mvhd.mjs'
 import { trackAtomParser } from './atom.trak.mjs'
 import { mdatAtomParser } from './atom.mdat.mjs'
+import { prflAtomParser } from './atom.prfl.mjs'
 
 const log = console
 
@@ -25,5 +26,6 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('mvhd', mvhdAtomParser)
         this.defineParser('trak', trackAtomParser)
         this.defineParser('mdat', mdatAtomParser)
+        this.defineParser('prfl', prflAtomParser)
     }
 }

@@ -15,6 +15,8 @@ export default class MoovAtom extends Atom {
     /** @type {MvhdAtom} */
     mvhd
 
+    clip
+
     /** @type {TrakAtom[]} */
     traks = []
 }

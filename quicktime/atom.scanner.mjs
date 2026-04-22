@@ -85,7 +85,6 @@ export default class AtomScanner {
             let parse = this.#parsers.get(this.#typeToNumber(atom.type))
 
             if (parse) {
-                log.info(`${atom.getTypeString()} [${atom.type.toString()}]: parsing ${atom.extendedSize || atom.size} bytes`)
                 atom = await parse(reader, atom, this)
             }
             else {

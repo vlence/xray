@@ -1,6 +1,8 @@
 import ByteReader from '../utils/bytereader.mjs'
 import AtomScanner from './atom.scanner.mjs'
 import Atom from './atom.mjs'
+import Matrix from './matrix.mjs'
+import MacintoshDate from './date.mjs'
 
 const log = console
 
@@ -23,8 +25,18 @@ export default class MvhdAtom extends Atom {
      * @type {Uint8Array<ArrayBuffer>} */
     flags
 
+    /**
+     * When this movie was created
+     *
+     * @type {Date}
+     */
     creationTime
 
+    /**
+     * When this movie was last modified
+     *
+     * @type {Date}
+     */
     modificationTime
 
     /**
@@ -38,12 +50,16 @@ export default class MvhdAtom extends Atom {
      * Derived from the movie's tracks; duration of the
      * longest track in the movie.
      *
+     * To get the duration of this movie in seconds multiply
+     * this value with `timeScale`.
+     *
      * @type {number}
      */
     duration
 
     /**
-     * Specifies the rate at which to play this movie.
+     * 32-bit fixed point number that specifies the rate at which
+     * to play this movie.
      *
      * A value of 1.0 indicates normal rate.
      *
@@ -52,7 +68,15 @@ export default class MvhdAtom extends Atom {
     preferredRate
 
     /**
-     * Preferred loudness of sound.
+     * 10 bytes reserved by Apple. All bytes are 0.
+     *
+     * @type {Uint8Array<ArrayBuffer>}
+     */
+    reserved
+
+    /**
+     * 16-bit fixed point number that specifies preferred loudness
+     * of sound.
      *
      * Value of 1.0 indicates full volume.
      *
@@ -60,6 +84,11 @@ export default class MvhdAtom extends Atom {
      */
     preferredVolume
 
+    /**
+     * The matrix structure associated with this movie.
+     *
+     * @type {Matrix}
+     */
     matrixStructure
 
     /**
@@ -108,6 +137,12 @@ export default class MvhdAtom extends Atom {
      */
     currentTime
 
+    /**
+     * 32-bit number indicating the id of the next track added
+     * to this movie
+     *
+     * @type {number}
+     */
     nextTrackID
 }
 
@@ -133,14 +168,12 @@ export async function mvhdAtomParser(reader, atomTemplate, scanner) {
     atom.flags = await reader.readBytes(3)
     bytesRemaining -= 3
 
-    // TODO
     atom.creationTime = await reader.readBytes(4)
-        .then(arr => new Date(Date.UTC(new DataView(arr.buffer).getUint32() * 1000)))
+        .then(arr => MacintoshDate.from(new DataView(arr.buffer).getUint32()))
     bytesRemaining -= 4
 
-    // TODO
     atom.modificationTime = await reader.readBytes(4)
-        .then(arr => new Date(Date.UTC(new DataView(arr.buffer).getUint32() * 1000)))
+        .then(arr => MacintoshDate.from(new DataView(arr.buffer).getUint32()))
     bytesRemaining -= 4
 
     atom.timeScale = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
@@ -156,8 +189,11 @@ export async function mvhdAtomParser(reader, atomTemplate, scanner) {
     atom.preferredVolume = await reader.readBytes(2)
     bytesRemaining -= 2
 
-    // TODO
+    atom.reserved = await reader.readBytes(10)
+    bytesRemaining -= 10
+
     atom.matrixStructure = await reader.readBytes(36)
+        .then(arr => new Matrix(arr))
     bytesRemaining -= 36
 
     atom.previewTime = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
@@ -180,11 +216,6 @@ export async function mvhdAtomParser(reader, atomTemplate, scanner) {
 
     atom.nextTrackID = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
     bytesRemaining -= 4
-
-    if (bytesRemaining > 0) {
-        log.warn('mvhd:', bytesRemaining, 'bytes remaining')
-        await reader.skipBytes(bytesRemaining)
-    }
 
     return atom
 }

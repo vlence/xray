@@ -2,9 +2,12 @@ import AtomScanner from './atom.scanner.mjs'
 import { ftypAtomParser } from './atom.ftyp.mjs'
 import { moovAtomParser } from './atom.moov.mjs'
 import { mvhdAtomParser } from './atom.mvhd.mjs'
-import { trackAtomParser } from './atom.trak.mjs'
+import { trakAtomParser } from './atom.trak.mjs'
 import { mdatAtomParser } from './atom.mdat.mjs'
 import { prflAtomParser } from './atom.prfl.mjs'
+import { clipAtomParser } from './atom.clip.mjs'
+import { crgnAtomParser } from './atom.crgn.mjs'
+import { tkhdAtomParser } from './atom.tkhd.mjs'
 
 const log = console
 
@@ -24,8 +27,11 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('ftyp', ftypAtomParser)
         this.defineParser('moov', moovAtomParser)
         this.defineParser('mvhd', mvhdAtomParser)
-        this.defineParser('trak', trackAtomParser)
+        this.defineParser('trak', trakAtomParser)
         this.defineParser('mdat', mdatAtomParser)
         this.defineParser('prfl', prflAtomParser)
+        this.defineParser('clip', clipAtomParser)
+        this.defineParser('crgn', crgnAtomParser)
+        this.defineParser('tkhd', tkhdAtomParser)
     }
 }

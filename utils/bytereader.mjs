@@ -184,3 +184,67 @@ export default class ByteReader {
         }
     }
 }
+
+/**
+ * Reads at most n bytes from the underlying reader.
+ */
+export class NByteReader {
+    /**
+     * @type {number|bigint}
+     */
+    #bytesRemaining
+
+    /**
+     * @type {ByteReader}
+     */
+    #reader
+
+    /**
+     * @param {ByteReader} reader
+     * @param {number|bigint} n
+     */
+    constructor(reader, n) {
+        this.#reader = reader
+        this.#bytesRemaining = n
+    }
+
+    /**
+     * @param {number} n
+     */
+    async readBytes(n) {
+        if (n > this.#bytesRemaining) {
+            throw new RangeError(`reading ${n} bytes but only ${this.#bytesRemaining} left`)
+        }
+
+        const arr = await this.#reader.readBytes(n)
+
+        this.#bytesRemaining -= n
+
+        return arr
+    }
+
+    /**
+     * Reads and discards `n` bytes. If `n` is greater than
+     * the total number of bytes remaining then all remaining
+     * bytes are read and discarded.
+     *
+     * @param {number|bigint} n
+     */
+    async skipBytes(n) {
+        if (n > this.#bytesRemaining) {
+            n = this.#bytesRemaining
+        }
+
+        await this.#reader.skipBytes(n)
+
+        this.#bytesRemaining -= n
+    }
+
+    bytesRemaining() {
+        return this.#bytesRemaining
+    }
+
+    updateBytesRemaining(n) {
+        this.#bytesRemaining -= n
+    }
+}

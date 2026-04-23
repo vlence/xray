@@ -1,4 +1,4 @@
-import ByteReader from '../utils/bytereader.mjs'
+import { NByteReader } from '../utils/bytereader.mjs'
 import * as textDecoders from '../utils/textdecoder.mjs'
 import Atom from './atom.mjs'
 import AtomScanner from './atom.scanner.mjs'
@@ -41,7 +41,7 @@ export default class FtypAtom extends Atom {
 /**
  * Parses an ftyp atom's data.
  *
- * @param {ByteReader} reader
+ * @param {NByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */
@@ -51,25 +51,11 @@ export async function ftypAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.extendedSize = atomTemplate.extendedSize
 
-    let bytesRemaining = atom.size - 8
-
-    if (reader.done() || bytesRemaining == 0) {
-        return atom
-    }
-
     atom.majorBrand = await reader.readBytes(4)
-    bytesRemaining -= 4
-
-    if (reader.done() || bytesRemaining == 0) {
-        return atom
-    }
-
     atom.minorBrand = await reader.readBytes(4)
-    bytesRemaining -= 4
 
-    while (!reader.done() && bytesRemaining > 0) {
+    while (reader.bytesRemaining() > 0) {
         atom.compatibleBrands.push(await reader.readBytes(4))
-        bytesRemaining -= 4
     }
 
     return atom

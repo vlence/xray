@@ -1,8 +1,9 @@
-import ByteReader from '../utils/bytereader.mjs'
+import { NByteReader } from '../utils/bytereader.mjs'
 import AtomScanner from './atom.scanner.mjs'
 import Atom from './atom.mjs'
 import MvhdAtom from './atom.mvhd.mjs'
 import TrakAtom from './atom.trak.mjs'
+import ClipAtom from './atom.clip.mjs'
 
 const log = console
 
@@ -15,6 +16,7 @@ export default class MoovAtom extends Atom {
     /** @type {MvhdAtom} */
     mvhd
 
+    /** @type {ClipAtom} */
     clip
 
     /** @type {TrakAtom[]} */
@@ -24,7 +26,7 @@ export default class MoovAtom extends Atom {
 /**
  * Parses a moov atom's data.
  *
- * @param {ByteReader} reader
+ * @param {NByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */
@@ -35,14 +37,8 @@ export async function moovAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.extendedSize = atomTemplate.extendedSize
 
-    let bytesRemaining = atom.size - 8
-
-    if (bytesRemaining == 0) {
-        return atom
-    }
-
     for await (const nextAtom of scanner) {
-        bytesRemaining -= nextAtom.size
+        reader.updateBytesRemaining(nextAtom.size)
 
         atom.children.push(nextAtom)
 
@@ -52,12 +48,11 @@ export async function moovAtomParser(reader, atomTemplate, scanner) {
         else if (nextAtom instanceof TrakAtom) {
             atom.traks.push(nextAtom)
         }
-
-        if (bytesRemaining < 0) {
-            throw new RangeError(`moov: read more than ${atom.getDataSize()} bytes`)
+        else if (nextAtom instanceof ClipAtom) {
+            atom.clip = nextAtom
         }
 
-        if (bytesRemaining == 0) {
+        if (reader.bytesRemaining() == 0) {
             break
         }
     }

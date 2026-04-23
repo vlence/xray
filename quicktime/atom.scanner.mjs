@@ -1,5 +1,5 @@
 import Atom from './atom.mjs'
-import ByteReader from '../utils/bytereader.mjs'
+import ByteReader, { NByteReader } from '../utils/bytereader.mjs'
 
 const log = console
 
@@ -85,7 +85,12 @@ export default class AtomScanner {
             let parse = this.#parsers.get(this.#typeToNumber(atom.type))
 
             if (parse) {
-                atom = await parse(reader, atom, this)
+                const nreader = new NByteReader(reader, atom.getDataSize())
+                atom = await parse(nreader, atom, this)
+
+                if (nreader.bytesRemaining() > 0) {
+                    throw new RangeError(`${nreader.bytesRemaining()} bytes unread after reading atom "${atom.getTypeString()}" [${atom.type}]`)
+                }
             }
             else {
                 let skip = atom.size - 8

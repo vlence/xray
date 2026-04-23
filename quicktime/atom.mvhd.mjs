@@ -168,12 +168,10 @@ export async function mvhdAtomParser(reader, atomTemplate, scanner) {
     atom.flags = await reader.readBytes(3)
     bytesRemaining -= 3
 
-    atom.creationTime = await reader.readBytes(4)
-        .then(arr => MacintoshDate.from(new DataView(arr.buffer).getUint32()))
+    atom.creationTime = await reader.readBytes(4).then(arr => MacintoshDate.from(arr))
     bytesRemaining -= 4
 
-    atom.modificationTime = await reader.readBytes(4)
-        .then(arr => MacintoshDate.from(new DataView(arr.buffer).getUint32()))
+    atom.modificationTime = await reader.readBytes(4).then(arr => MacintoshDate.from(arr))
     bytesRemaining -= 4
 
     atom.timeScale = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())

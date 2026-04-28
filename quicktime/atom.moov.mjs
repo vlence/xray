@@ -1,5 +1,4 @@
-import { NByteReader } from '../utils/bytereader.mjs'
-import AtomScanner from './atom.scanner.mjs'
+import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import Atom from './atom.mjs'
 import MvhdAtom from './atom.mvhd.mjs'
 import TrakAtom from './atom.trak.mjs'
@@ -26,7 +25,7 @@ export default class MoovAtom extends Atom {
 /**
  * Parses a moov atom's data.
  *
- * @param {NByteReader} reader
+ * @param {AtomByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */

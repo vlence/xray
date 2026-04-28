@@ -1,6 +1,5 @@
-import ByteReader from '../utils/bytereader.mjs'
 import Atom from './atom.mjs'
-import AtomScanner from './atom.scanner.mjs'
+import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
  * The clipping region atom.
@@ -37,7 +36,7 @@ export default class CrgnAtom extends Atom {
 /**
  * Parses an crgn atom's data.
  *
- * @param {ByteReader} reader
+ * @param {AtomByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */
@@ -47,11 +46,9 @@ export async function crgnAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.regionSize = await reader.readBytes(2).then(arr => new DataView(arr.buffer).getUint16())
-
-    atom.regionBoundaryBox = await reader.readBytes(8).then(arr => new DataView(arr.buffer).getBigUint64())
-
-    atom.regionData = await reader.readBytes(atom.getDataSize() - 10)
+    atom.regionSize = await reader.readUint16()
+    atom.regionBoundaryBox = await reader.readBigUint64()
+    atom.regionData = await reader.read(reader.bytesRemaining())
 
     return atom
 }

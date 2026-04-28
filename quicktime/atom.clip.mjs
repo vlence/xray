@@ -1,7 +1,6 @@
-import ByteReader from '../utils/bytereader.mjs'
 import CrgnAtom from './atom.crgn.mjs'
 import Atom from './atom.mjs'
-import AtomScanner from './atom.scanner.mjs'
+import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
  * The clip atom.
@@ -18,7 +17,7 @@ export default class ClipAtom extends Atom {
 /**
  * Parses a clip atom's data.
  *
- * @param {ByteReader} reader
+ * @param {AtomByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */

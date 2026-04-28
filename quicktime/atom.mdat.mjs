@@ -1,5 +1,4 @@
-import ByteReader from '../utils/bytereader.mjs'
-import AtomScanner from './atom.scanner.mjs'
+import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import Atom from './atom.mjs'
 
 /**
@@ -15,7 +14,7 @@ export default class MdatAtom extends Atom {
 /**
  * Parses a moov atom's data.
  *
- * @param {ByteReader} reader
+ * @param {AtomByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */
@@ -25,31 +24,7 @@ export async function mdatAtomParser(reader, atomTemplate, scanner) {
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type
     atom.extendedSize = atomTemplate.extendedSize
-
-    let bytesRemaining = atom.getDataSize()
-    /** @type {Uint8Array<ArrayBuffer>[]} */
-    const bufs = []
-
-    if (!atom.usesExtendedSize()) {
-        bufs.push(await reader.readBytes(bytesRemaining))
-        bytesRemaining = 0n
-    }
-
-    const maxUint32 = 0xffffffff
-    const maxUint32BigInt = BigInt(maxUint32)
-
-    while (bytesRemaining > 0n) {
-        if (bytesRemaining > maxUint32BigInt) {
-            bufs.push(await reader.readBytes(maxUint32))
-            bytesRemaining -= maxUint32BigInt
-        }
-        else {
-            bufs.push(await reader.readBytes(Number(bytesRemaining)))
-            bytesRemaining = 0n
-        }
-    }
-
-    atom.movieMediaData = new Blob(bufs)
+    atom.movieMediaData = await reader.readBlob(atom.getDataSize())
 
     return atom
 }

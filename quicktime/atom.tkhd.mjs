@@ -1,5 +1,4 @@
-import ByteReader from '../utils/bytereader.mjs'
-import AtomScanner from './atom.scanner.mjs'
+import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import Atom from './atom.mjs'
 import Matrix from './matrix.mjs'
 import MacintoshDate from './date.mjs'
@@ -94,7 +93,7 @@ export default class TkhdAtom extends Atom {
 /**
  * Parses a tkhd atom's data.
  *
- * @param {ByteReader} reader
+ * @param {AtomByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */
@@ -105,35 +104,21 @@ export async function tkhdAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readBytes(1).then(arr => arr.buffer[0])
-
-    atom.flags = await reader.readBytes(3) // TODO
-
-    atom.creationTime = await reader.readBytes(4).then(arr => MacintoshDate.from(arr))
-
-    atom.modificationTime = await reader.readBytes(4).then(arr => MacintoshDate.from(arr))
-
-    atom.id = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-
-    await reader.skipBytes(4) // reserved field
-
-    atom.duration = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-
-    await reader.skipBytes(8) // reserved field
-
-    atom.layer = await reader.readBytes(2).then(arr => new DataView(arr.buffer).getUint16())
-
-    atom.alternateGroup = await reader.readBytes(2).then(arr => new DataView(arr.buffer).getUint16())
-
-    atom.volume = await reader.readBytes(2).then(arr => new DataView(arr.buffer).getUint16())
-
-    await reader.skipBytes(2) // reserved field
-
-    atom.matrix = await reader.readBytes(36).then(arr => new Matrix(arr))
-
-    atom.width = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-
-    atom.height = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
+    atom.version = await reader.readUint8()
+    atom.flags = await reader.read(3) // TODO
+    atom.creationTime = await reader.readMacintoshDate()
+    atom.modificationTime = await reader.readMacintoshDate()
+    atom.id = await reader.readUint32()
+    await reader.read(4) // reserved field
+    atom.duration = await reader.readUint32()
+    await reader.read(8) // reserved field
+    atom.layer = await reader.readUint16()
+    atom.alternateGroup = await reader.readUint16()
+    atom.volume = await reader.readUint16()
+    await reader.read(2) // reserved field
+    atom.matrix = await reader.readMatrix()
+    atom.width = await reader.readUint32()
+    atom.height = await reader.readUint32()
 
     return atom
 }

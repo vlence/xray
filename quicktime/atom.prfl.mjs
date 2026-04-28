@@ -1,6 +1,5 @@
-import ByteReader from '../utils/bytereader.mjs'
 import Atom from './atom.mjs'
-import AtomScanner from './atom.scanner.mjs'
+import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
  * The prfl atom. This atom is deprecated.
@@ -43,7 +42,7 @@ export default class PrflAtom extends Atom {
 /**
  * Parses an ftyp atom's data.
  *
- * @param {ByteReader} reader
+ * @param {AtomByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */
@@ -53,14 +52,10 @@ export async function prflAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.extendedSize = atomTemplate.extendedSize
 
-    await reader.skipBytes(4) // reserved field
-
-    atom.partId = await reader.readBytes(4)
-
-    atom.featureCode = await reader.readBytes(4)
-        .then(arr => new DataView(arr.buffer).getUint32())
-
-    atom.value = await reader.readBytes(4)
+    await reader.read(4) // reserved field
+    atom.partId = await reader.read(4)
+    atom.featureCode = await reader.readUint32()
+    atom.value = await reader.read(4)
 
     return atom
 }

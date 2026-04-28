@@ -1,7 +1,6 @@
-import { NByteReader } from "../utils/bytereader.mjs";
 import ClipAtom from "./atom.clip.mjs";
 import Atom from "./atom.mjs";
-import AtomScanner from "./atom.scanner.mjs";
+import AtomScanner, { AtomByteReader } from "./atom.scanner.mjs";
 import TkhdAtom from "./atom.tkhd.mjs";
 
 /**
@@ -26,7 +25,7 @@ export default class TrakAtom extends Atom {
 /**
  * Parses a trak atom's data.
  *
- * @param {NByteReader} reader
+ * @param {AtomByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */

@@ -1,5 +1,7 @@
 import Atom from './atom.mjs'
-import ByteReader, { NByteReader } from '../utils/bytereader.mjs'
+import ByteReader from '../utils/bytereader.mjs'
+import MacintoshDate from './date.mjs'
+import Matrix from './matrix.mjs'
 
 const log = console
 
@@ -30,6 +32,9 @@ export default class AtomScanner {
 
     /** @type {ByteReader} */
     #reader
+
+    /** @type {AtomByteReader?} */
+    #atomReader
 
     /**
      * @param {ReadableStream<Uint8Array<Array>>} stream
@@ -85,12 +90,22 @@ export default class AtomScanner {
             let parse = this.#parsers.get(this.#typeToNumber(atom.type))
 
             if (parse) {
-                const nreader = new NByteReader(reader, atom.getDataSize())
-                atom = await parse(nreader, atom, this)
+                let abr = this.#atomReader
 
-                if (nreader.bytesRemaining() > 0) {
-                    throw new RangeError(`${nreader.bytesRemaining()} bytes unread after reading atom "${atom.getTypeString()}" [${atom.type}]`)
+                if (abr) {
+                    abr = abr.child(atom.getDataSize())
                 }
+                else {
+                    abr = new AtomByteReader(reader, atom.getDataSize())
+                }
+
+                atom = await parse(abr, atom, this)
+
+                if (abr.bytesRemaining() != 0) {
+                    throw new Error(abr.bytesRemaining() + ' bytes unread')
+                }
+
+                abr = abr.parentReader()
             }
             else {
                 let skip = atom.size - 8
@@ -129,6 +144,220 @@ export default class AtomScanner {
     }
 }
 
+export class AtomByteReader {
+    /** @type {ByteReader} */
+    #byteReader
+
+    /** @type {number|bigint} */
+    #bytesRemaining
+
+    /** @type {AtomByteReader?} */
+    #parentReader
+
+    /**
+     * @param {ByteReader} reader
+     * @param {number|bigint} size
+     */
+    constructor(reader, size) {
+        this.#byteReader = reader
+        this.#bytesRemaining = size
+    }
+
+    bytesRemaining() {
+        return this.#bytesRemaining
+    }
+
+    parentReader() {
+        return this.#parentReader
+    }
+
+    /**
+     * @param {number|bigint} size
+     */
+    child(size) {
+        this.#validateSize(size)
+
+        if (!this.bytesAvailable(size)) {
+            throw new RangeError(`attempting to read ${size} bytes but only ${this.#bytesRemaining} bytes available`)
+        }
+
+        const reader = new AtomByteReader(this.#byteReader, size)
+        reader.#parentReader = this
+
+        return reader
+    }
+
+    /**
+     * Attempt to read n bytes and return it.
+     *
+     * @param {number} n
+     *
+     * @returns {Promise<Uint8Array<ArrayBuffer>>}
+     */
+    async read(n) {
+        this.#validateSize(n)
+
+        if (!this.bytesAvailable(n)) {
+            throw new RangeError(`attempting to read ${n} bytes but only ${this.#bytesRemaining} bytes available`)
+        }
+
+        const buf = await this.#byteReader.readBytes(n)
+        this.updateBytesRemaining(buf.byteLength)
+
+        return buf
+    }
+
+    async readBytes(n) {
+        return this.read(n)
+    }
+
+    /**
+     * @param {number|bigint} n
+     */
+    async skipBytes(n) {
+        await this.read(n)
+    }
+
+    async readInt8() {
+        const arr = await this.readBytes(1)
+        return new DataView(arr.buffer).getInt8()
+    }
+
+    async readInt16() {
+        const arr = await this.readBytes(2)
+        return new DataView(arr.buffer).getInt16()
+    }
+
+    async readInt32() {
+        const arr = await this.readBytes(4)
+        return new DataView(arr.buffer).getInt32()
+    }
+
+    async readBigInt64() {
+        const arr = await this.readBytes(8)
+        return new DataView(arr.buffer).getBigInt64()
+    }
+
+    async readUint8() {
+        const arr = await this.readBytes(1)
+        return new DataView(arr.buffer).getUint8()
+    }
+
+    async readUint16() {
+        const arr = await this.readBytes(2)
+        return new DataView(arr.buffer).getUint16()
+    }
+
+    async readUint32() {
+        const arr = await this.readBytes(4)
+        return new DataView(arr.buffer).getUint32()
+    }
+
+    async readBigUint64() {
+        const arr = await this.readBytes(8)
+        return new DataView(arr.buffer).getBigUint64()
+    }
+
+    async readFloat32() {
+        const arr = await this.readBytes(4)
+        return new DataView(arr.buffer).getFloat32()
+    }
+
+    async readFloat64() {
+        const arr = await this.readBytes(8)
+        return new DataView(arr.buffer).getFloat64()
+    }
+
+    /**
+     * @param {number|bigint} n
+     */
+    async readBlob(n) {
+        let bytesRemaining = BigInt(n)
+
+        const bufs = []
+
+        const maxUint32 = 0xffffffff
+        const maxUint32BigInt = BigInt(maxUint32)
+
+        while (bytesRemaining > 0n) {
+            if (bytesRemaining > maxUint32BigInt) {
+                bufs.push(await this.read(maxUint32))
+                bytesRemaining -= maxUint32BigInt
+            }
+            else {
+                bufs.push(await this.read(Number(bytesRemaining)))
+                bytesRemaining = 0n
+            }
+        }
+
+        return new Blob(bufs)
+    }
+
+    async readMacintoshDate() {
+        const arr = await this.read(4)
+        return MacintoshDate.from(arr)
+    }
+
+    async readMatrix() {
+        const arr = await this.read(36)
+        return new Matrix(arr)
+    }
+
+    /**
+     * @param {number|bigint} n
+     */
+    updateBytesRemaining(n) {
+        if (typeof this.#bytesRemaining == 'bigint') {
+            this.#bytesRemaining -= BigInt(n)
+        }
+        else if (typeof n == 'bigint') {
+            this.#bytesRemaining -= Number(n)
+        }
+        else {
+            this.#bytesRemaining -= n
+        }
+
+        if (this.#parentReader) {
+            this.#parentReader.updateBytesRemaining(buf.byteLength)
+        }
+    }
+
+    /**
+     * @param {number|bigint} n
+     */
+    #validateSize(n) {
+        if (typeof n != 'number') {
+            throw new Error('n must be a number')
+        }
+
+        if (isNaN(n)) {
+            throw new Error('n must not be NaN')
+        }
+
+        if (n < 0) {
+            throw new RangeError('n must be a non-negative integer')
+        }
+
+        if (n >= 0x80_000_000) {
+            throw new RangeError('n must be less than ' + 0x80_000_000.toString(10))
+        }
+    }
+
+    /**
+     * @param {number|bigint} n
+     */
+    bytesAvailable(n) {
+        if (typeof this.#bytesRemaining == 'bigint') {
+            return this.#bytesRemaining >= BigInt(n)
+        }
+        else if (typeof n == 'bigint') {
+            return this.#bytesRemaining >= Number(n)
+        }
+
+        return this.#bytesRemaining >= n
+    }
+}
+
 /**
  * A function that can parse a specific atom's
  * data.
@@ -138,7 +367,7 @@ export default class AtomScanner {
  * to interpret the bytes.
  *
  * @callback AtomParser
- * @param {ByteReader} reader
+ * @param {AtomByteReader} reader
  * @param {Atom} atom
  * @param {AtomScanner} scanner
  * @returns {Promise<T extends Atom>}

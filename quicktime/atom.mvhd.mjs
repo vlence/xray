@@ -1,5 +1,4 @@
-import ByteReader from '../utils/bytereader.mjs'
-import AtomScanner from './atom.scanner.mjs'
+import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import Atom from './atom.mjs'
 import Matrix from './matrix.mjs'
 import MacintoshDate from './date.mjs'
@@ -66,13 +65,6 @@ export default class MvhdAtom extends Atom {
      * @type {number}
      */
     preferredRate
-
-    /**
-     * 10 bytes reserved by Apple. All bytes are 0.
-     *
-     * @type {Uint8Array<ArrayBuffer>}
-     */
-    reserved
 
     /**
      * 16-bit fixed point number that specifies preferred loudness
@@ -149,7 +141,7 @@ export default class MvhdAtom extends Atom {
 /**
  * Parses a mvhd atom's data.
  *
- * @param {ByteReader} reader
+ * @param {AtomByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */
@@ -160,60 +152,23 @@ export async function mvhdAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.extendedSize = atomTemplate.extendedSize
 
-    let bytesRemaining = atom.getDataSize()
-
-    atom.version = await reader.readBytes(1).then(arr => arr[0])
-    bytesRemaining -= 1
-
-    atom.flags = await reader.readBytes(3)
-    bytesRemaining -= 3
-
-    atom.creationTime = await reader.readBytes(4).then(arr => MacintoshDate.from(arr))
-    bytesRemaining -= 4
-
-    atom.modificationTime = await reader.readBytes(4).then(arr => MacintoshDate.from(arr))
-    bytesRemaining -= 4
-
-    atom.timeScale = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-    bytesRemaining -= 4
-
-    atom.duration = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-    bytesRemaining -= 4
-
-    atom.preferredRate = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getFloat32())
-    bytesRemaining -= 4
-
-    // TODO
-    atom.preferredVolume = await reader.readBytes(2)
-    bytesRemaining -= 2
-
-    atom.reserved = await reader.readBytes(10)
-    bytesRemaining -= 10
-
-    atom.matrixStructure = await reader.readBytes(36)
-        .then(arr => new Matrix(arr))
-    bytesRemaining -= 36
-
-    atom.previewTime = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-    bytesRemaining -= 4
-
-    atom.previewDuration = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-    bytesRemaining -= 4
-
-    atom.posterTime = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-    bytesRemaining -= 4
-
-    atom.selectionTime = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-    bytesRemaining -= 4
-
-    atom.selectionDuration = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-    bytesRemaining -= 4
-
-    atom.currentTime = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-    bytesRemaining -= 4
-
-    atom.nextTrackID = await reader.readBytes(4).then(arr => new DataView(arr.buffer).getUint32())
-    bytesRemaining -= 4
+    atom.version = await reader.readUint8()
+    atom.flags = await reader.read(3)
+    atom.creationTime = await reader.readMacintoshDate()
+    atom.modificationTime = await reader.readMacintoshDate()
+    atom.timeScale = await reader.readUint32()
+    atom.duration = await reader.readUint32()
+    atom.preferredRate = await reader.readFloat32()
+    atom.preferredVolume = await reader.read(2) // TODO
+    await reader.read(10) // reserved
+    atom.matrixStructure = await reader.readMatrix()
+    atom.previewTime = await reader.readUint32()
+    atom.previewDuration = await reader.readUint32()
+    atom.posterTime = await reader.readUint32()
+    atom.selectionTime = await reader.readUint32()
+    atom.selectionDuration = await reader.readUint32()
+    atom.currentTime = await reader.readUint32()
+    atom.nextTrackID = await reader.readUint32()
 
     return atom
 }

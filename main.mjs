@@ -160,9 +160,7 @@ class RendererRegistry {
             const modulePath = `${this.basePath}/${mime}.mjs`
 
             try {
-                log.debug('loading renderer', modulePath)
                 const module = await import(modulePath)
-                log.debug('loaded renderer', mime, module)
                 const RendererClass = module.default
                 renderer = new RendererClass()
                 this.renderers[mime] = renderer

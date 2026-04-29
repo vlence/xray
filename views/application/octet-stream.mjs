@@ -175,17 +175,19 @@ export default class BinaryRenderer extends Renderer {
         if (stream) {
             const reader = new ByteReader(stream)
             const bytesPerPage = this.#bytesPerRow * this.#rowsPerPage
+            const page = new Uint8Array(bytesPerPage)
 
             this.#pages = []
 
-            reader.readBytes(bytesPerPage)
-                .then(async page => {
+            reader.read(page)
+                .then(async () => {
                     // render the first page immediately
                     this.#pages.push(page)
                     requestAnimationFrame(() => this.#renderPage(0))
 
                     while (!reader.done()) {
-                        const nextPage = await reader.readBytes(bytesPerPage)
+                        const nextPage = new Uint8Array(bytesPerPage)
+                        await reader.read(nextPage)
                         this.#pages.push(nextPage)
                     }
                 })

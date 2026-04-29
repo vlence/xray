@@ -82,4 +82,17 @@ export default class Atom {
 
         return this.size - 8
     }
+
+    /**
+     * Returns the size of this atom in bytes.
+     *
+     * @returns {number|bigint}
+     */
+    getSize() {
+        if (this.usesExtendedSize()) {
+            return this.extendedSize
+        }
+
+        return this.size
+    }
 }

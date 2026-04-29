@@ -22,7 +22,7 @@ export default class MvhdAtom extends Atom {
      * Unused. Reserved for future use.
      *
      * @type {Uint8Array<ArrayBuffer>} */
-    flags
+    flags = new Uint8Array(3)
 
     /**
      * When this movie was created
@@ -153,14 +153,14 @@ export async function mvhdAtomParser(reader, atomTemplate, scanner) {
     atom.extendedSize = atomTemplate.extendedSize
 
     atom.version = await reader.readUint8()
-    atom.flags = await reader.read(3)
+    await reader.read(atom.flags)
     atom.creationTime = await reader.readMacintoshDate()
     atom.modificationTime = await reader.readMacintoshDate()
     atom.timeScale = await reader.readUint32()
     atom.duration = await reader.readUint32()
-    atom.preferredRate = await reader.readFloat32()
-    atom.preferredVolume = await reader.read(2) // TODO
-    await reader.read(10) // reserved
+    atom.preferredRate = await reader.readFixed32()
+    atom.preferredVolume = await reader.readFixed16()
+    await reader.skip(10) // reserved
     atom.matrixStructure = await reader.readMatrix()
     atom.previewTime = await reader.readUint32()
     atom.previewDuration = await reader.readUint32()

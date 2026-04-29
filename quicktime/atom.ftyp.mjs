@@ -9,10 +9,10 @@ import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
  */
 export default class FtypAtom extends Atom {
     /** @type {Uint8Array<ArrayBuffer>} */
-    majorBrand
+    majorBrand = new Uint8Array(4)
 
     /** @type {Uint8Array<ArrayBuffer>} */
-    minorBrand
+    minorBrand = new Uint8Array(4)
 
     /** @type {Uint8Array<ArrayBuffer>[]?} */
     compatibleBrands = []
@@ -46,11 +46,16 @@ export async function ftypAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.majorBrand = await reader.read(4)
-    atom.minorBrand = await reader.read(4)
+    await reader.read(atom.majorBrand)
+    await reader.read(atom.minorBrand)
 
-    while (reader.bytesRemaining() > 0) {
-        atom.compatibleBrands.push(await reader.read(4))
+    let bytesRemaining = atom.getDataSize() - 8
+
+    while (bytesRemaining > 0) {
+        const brand = new Uint8Array(4)
+        atom.compatibleBrands.push(brand)
+        await reader.read(brand)
+        bytesRemaining -= 4
     }
 
     return atom

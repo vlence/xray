@@ -35,9 +35,11 @@ export async function trakAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.extendedSize = atomTemplate.extendedSize
 
+    let bytesRemaining = atom.getDataSize()
+
     for await (const nextAtom of scanner) {
         atom.children.push(nextAtom)
-        reader.updateBytesRemaining(nextAtom.size)
+        bytesRemaining -= nextAtom.getSize()
 
         if (nextAtom instanceof TkhdAtom) {
             atom.tkhd = nextAtom
@@ -46,7 +48,7 @@ export async function trakAtomParser(reader, atomTemplate, scanner) {
             atom.clip = nextAtom
         }
 
-        if (reader.bytesRemaining() == 0) {
+        if (bytesRemaining == 0) {
             break
         }
     }

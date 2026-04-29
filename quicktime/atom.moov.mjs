@@ -36,8 +36,10 @@ export async function moovAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.extendedSize = atomTemplate.extendedSize
 
+    let bytesRemaining = atom.getDataSize()
+
     for await (const nextAtom of scanner) {
-        reader.updateBytesRemaining(nextAtom.size)
+        bytesRemaining -= nextAtom.getSize()
 
         atom.children.push(nextAtom)
 
@@ -51,7 +53,7 @@ export async function moovAtomParser(reader, atomTemplate, scanner) {
             atom.clip = nextAtom
         }
 
-        if (reader.bytesRemaining() == 0) {
+        if (bytesRemaining == 0) {
             break
         }
     }

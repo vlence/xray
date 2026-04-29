@@ -14,6 +14,14 @@ export default class ByteReader {
     /** @type {ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>} */
     #reader
 
+    // The buffers for reading 1 byte, 2 bytes, 4 bytes and 8 bytes.
+    // You might be tempted to use the same buffer, say of size 8,
+    // for all your reading purposes but don't do it.
+    #bytes1 = new Uint8Array(1)
+    #bytes2 = new Uint8Array(2)
+    #bytes4 = new Uint8Array(4)
+    #bytes8 = new Uint8Array(8)
+
     /**
      * @param {ReadableStream<Uint8Array<ArrayBuffer>>} stream
      */
@@ -34,23 +42,32 @@ export default class ByteReader {
     }
 
     /**
-     * Read len bytes and return them.
+     * Reads up to `buf.byteLength` bytes into `buf` and
+     * returns the number of bytes read.
      *
-     * @param {number} len The number of bytes to read
+     * @param {Uint8Array<ArrayBuffer>} buf
      *
-     * @returns {Promise<Uint8Array<ArrayBuffer>>}
+     * @returns {Promise<number>}
      */
-    async readBytes(len) {
-        if (typeof len != 'number' || isNaN(len) || len <= 0) {
-            return new Uint8Array(0)
+    async read(buf) {
+        if (!(buf instanceof Uint8Array)) {
+            throw new TypeError('buf must be Uint8Array')
         }
 
         if (!this.#reader) {
-            throw new TypeError('reader is undefined')
+            throw new TypeError('buf is undefined')
         }
 
         if (this.#done) {
             throw new Error('EOF')
+        }
+
+        if (!buf) {
+            return 0
+        }
+
+        if (buf.byteLength == 0) {
+            return 0
         }
 
         // We may provision more bytes than we read
@@ -59,37 +76,37 @@ export default class ByteReader {
         // later trim out the excess bytes.
         // 
         // For example you may want to read 8 bytes
-        // but there's only 3 bytes left. Since we
-        // first create an array buffer of 8 bytes
-        // we will return all of those 8 bytes. By
+        // but there's only 3 bytes left. By
         // keeping track of how many bytes were
         // actually read we can return only the 3
         // bytes.
         let bytesRead = 0
 
         let idx = 0
-        const view = new Uint8Array(new ArrayBuffer(len))
+        let n = buf.byteLength
 
-        while (len > 0 && !this.#done) {
-            if (len < this.#chunk.byteLength) {
-                view.set(this.#chunk.subarray(0, len), idx)
-                this.#chunk = this.#chunk.subarray(len)
-                bytesRead += len
-                len = 0
+        while (n > 0 && !this.#done) {
+            if (n < this.#chunk.byteLength) {
+                buf.set(this.#chunk.subarray(0, n), idx)
+                bytesRead += n
+
+                this.#chunk = this.#chunk.subarray(n)
+
+                n = 0
             }
-            else if (len == this.#chunk.byteLength) {
-                view.set(this.#chunk, idx)
+            else if (n == this.#chunk.byteLength) {
+                buf.set(this.#chunk, idx)
+                bytesRead += n
 
                 const {done, value: chunk} = await this.#reader.read()
                 this.#done = done
                 this.#chunk = chunk
-                bytesRead += len
 
-                len = 0
+                n = 0
             }
             else {
-                view.set(this.#chunk, idx)
-                len -= this.#chunk.byteLength
+                buf.set(this.#chunk, idx)
+                n -= this.#chunk.byteLength
                 idx += this.#chunk.byteLength
                 bytesRead += this.#chunk.byteLength
 
@@ -99,20 +116,218 @@ export default class ByteReader {
             }
         }
 
-        return view.subarray(0, bytesRead)
+        return bytesRead
+    }
+
+    async readInt8() {
+        const dataview = new DataView(this.#bytes1.buffer)
+
+        const n = await this.read(this.#bytes1)
+
+        if (n != 1) {
+            throw new Error('read ' + n + ' bytes instead of 1')
+        }
+
+        return dataview.getInt8()
+    }
+
+    async readInt16() {
+        const dataview = new DataView(this.#bytes2.buffer)
+
+        const n = await this.read(this.#bytes2)
+
+        if (n != 2) {
+            throw new Error('read ' + n + ' bytes instead of 2')
+        }
+
+        return dataview.getInt16()
+    }
+
+    async readInt32() {
+        const dataview = new DataView(this.#bytes4.buffer)
+
+        const n = await this.read(this.#bytes4)
+
+        if (n != 4) {
+            throw new Error('read ' + n + ' bytes instead of 4')
+        }
+
+        return dataview.getInt32()
+    }
+
+    async readBigInt64() {
+        const dataview = new DataView(this.#bytes8.buffer)
+
+        const n = await this.read(this.#bytes8)
+
+        if (n != 8) {
+            throw new Error('read ' + n + ' bytes instead of 8')
+        }
+
+        return dataview.getBigInt64()
+    }
+
+    async readUint8() {
+        const dataview = new DataView(this.#bytes1.buffer)
+
+        const n = await this.read(this.#bytes1)
+
+        if (n != 1) {
+            throw new Error('read ' + n + ' bytes instead of 1')
+        }
+
+        return dataview.getUint8()
+    }
+
+    async readUint16() {
+        const dataview = new DataView(this.#bytes2.buffer)
+
+        const n = await this.read(this.#bytes2)
+
+        if (n != 2) {
+            throw new Error('read ' + n + ' bytes instead of 2')
+        }
+
+        return dataview.getUint16()
+    }
+
+    async readUint32() {
+        const dataview = new DataView(this.#bytes4.buffer)
+
+        const n = await this.read(this.#bytes4)
+
+        if (n != 4) {
+            throw new Error('read ' + n + ' bytes instead of 4')
+        }
+
+        return dataview.getUint32()
+    }
+
+    async readBigUint64() {
+        const dataview = new DataView(this.#bytes8.buffer)
+
+        const n = await this.read(this.#bytes8)
+
+        if (n != 8) {
+            throw new Error('read ' + n + ' bytes instead of 8')
+        }
+
+        return dataview.getBigUint64()
+    }
+
+    async readFloat32() {
+        const dataview = new DataView(this.#bytes4.buffer)
+
+        const n = await this.read(this.#bytes4)
+
+        if (n != 4) {
+            throw new Error('read ' + n + ' bytes instead of 4')
+        }
+
+        return dataview.getFloat32()
+    }
+
+    async readFloat64() {
+        const dataview = new DataView(this.#bytes8.buffer)
+
+        const n = await this.read(this.#bytes8)
+
+        if (n != 8) {
+            throw new Error('read ' + n + ' bytes instead of 8')
+        }
+
+        return dataview.getFloat64()
     }
 
     /**
-     * Read len bytes and discard them.
-     *
-     * @param {number|bigint} len The number of bytes to skip.
+     * @param {number} ibits Number of bits used for the integer part
      */
-    async skipBytes(len) {
-        const isNumber = typeof len == 'number'
-        const isBigInt = typeof len == 'bigint'
-        const negative = isNumber && len <= 0 || isBigInt && len <= 0n
+    async readFixed16(ibits = 8) {
+        if (typeof ibits != 'number') {
+            throw new TypeError('ibits must be a number')
+        }
 
-        if (isNaN(len) || negative) {
+        if (isNaN(ibits)) {
+            throw new Error('ibits must not be NaN')
+        }
+
+        if (ibits < 0) {
+            throw new Error('ibits must be non-negative')
+        }
+
+        if (ibits >= 16) {
+            throw new RangeError('ibits must be less than 16')
+        }
+
+        const fbits = 16 - ibits
+        const signBit = 1 << 15
+        const umask = signBit - 1
+        const scalingFactor = 2 ** fbits
+
+        const i16 = await this.readUint16()
+        const sign = i16 & signBit
+        const u16 = i16 & umask
+
+        let value = u16 / scalingFactor
+
+        if (sign != 0) {
+            value *= -1
+        }
+
+        return value
+    }
+
+    /**
+     * @param {number} ibits Number of bits used for the integer part
+     */
+    async readFixed32(ibits = 16) {
+        if (typeof ibits != 'number') {
+            throw new TypeError('ibits must be a number')
+        }
+
+        if (isNaN(ibits)) {
+            throw new Error('ibits must not be NaN')
+        }
+
+        if (ibits < 0) {
+            throw new Error('ibits must be non-negative')
+        }
+
+        if (ibits >= 32) {
+            throw new RangeError('ibits must be less than 16')
+        }
+
+        const fbits = 32 - ibits
+        const signBit = 1 << 31
+        const umask = signBit - 1
+        const scalingFactor = 2 ** fbits
+
+        const i32 = await this.readUint32()
+        const sign = i32 & signBit
+        const u32 = i32 & umask
+
+        let value = u32 / scalingFactor
+
+        if (sign != 0) {
+            value *= -1
+        }
+
+        return value
+    }
+
+    /**
+     * Read `n` bytes and discard them. The logic is essentially
+     * the same as `read()` but internally the bytes being read
+     * are not stored so we're saving on some memory allocation.
+     *
+     * @param {number|bigint} n The number of bytes to skip.
+     */
+    async skip(n) {
+        const isNumber = typeof n == 'number'
+        const isBigInt = typeof n == 'bigint'
+        const negative = (isNumber && n <= 0) || (isBigInt && n <= 0n)
+
+        if (isNaN(n) || negative) {
             return
         }
 
@@ -124,11 +339,11 @@ export default class ByteReader {
             throw new TypeError('reader is undefined')
         }
 
-        if (typeof len == 'number') {
-            await this.#skipBytesNumber(len)
+        if (typeof n == 'number') {
+            await this.#skipNumberN(n)
         }
         else {
-            await this.#skipBytesBigInt(len)
+            await this.#skipBigIntN(n)
         }
     }
 
@@ -137,7 +352,7 @@ export default class ByteReader {
      *
      * @param {number} len
      */
-    async #skipBytesNumber(len) {
+    async #skipNumberN(len) {
         while (len > 0 && !this.#done) {
             if (len < this.#chunk.byteLength) {
                 this.#chunk = this.#chunk.subarray(len)
@@ -164,21 +379,21 @@ export default class ByteReader {
      *
      * @param {bigint} len
      */
-    async #skipBytesBigInt(len) {
+    async #skipBigIntN(len) {
         const maxUint32 = 0xffffffff
         const maxUint32BigInt = BigInt(maxUint32)
 
         while (len > 0n && !this.#done) {
             if (len > maxUint32BigInt) {
-                this.#skipBytesNumber(maxUint32)
+                this.#skipNumberN(maxUint32)
                 len -= maxUint32BigInt
             }
             else if (len == maxUint32BigInt) {
-                this.#skipBytesNumber(maxUint32)
+                this.#skipNumberN(maxUint32)
                 len = 0n
             }
             else {
-                this.#skipBytesNumber(Number(len))
+                this.#skipNumberN(Number(len))
                 len = 0n
             }
         }

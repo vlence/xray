@@ -1,7 +1,6 @@
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import Atom from './atom.mjs'
 import Matrix from './matrix.mjs'
-import MacintoshDate from './date.mjs'
 
 const log = console
 
@@ -19,7 +18,7 @@ export default class TkhdAtom extends Atom {
     /**
      * @type {number}
      */
-    flags
+    flags = new Uint8Array(3)
 
     /**
      *  @type {Date}
@@ -105,20 +104,20 @@ export async function tkhdAtomParser(reader, atomTemplate, scanner) {
     atom.extendedSize = atomTemplate.extendedSize
 
     atom.version = await reader.readUint8()
-    atom.flags = await reader.read(3) // TODO
+    await reader.skip(3) // TODO: flags
     atom.creationTime = await reader.readMacintoshDate()
     atom.modificationTime = await reader.readMacintoshDate()
     atom.id = await reader.readUint32()
-    await reader.read(4) // reserved field
+    await reader.skip(4) // reserved field
     atom.duration = await reader.readUint32()
-    await reader.read(8) // reserved field
+    await reader.skip(8) // reserved field
     atom.layer = await reader.readUint16()
     atom.alternateGroup = await reader.readUint16()
-    atom.volume = await reader.readUint16()
-    await reader.read(2) // reserved field
+    atom.volume = await reader.readFixed16()
+    await reader.skip(2) // reserved field
     atom.matrix = await reader.readMatrix()
-    atom.width = await reader.readUint32()
-    atom.height = await reader.readUint32()
+    atom.width = await reader.readFixed32()
+    atom.height = await reader.readFixed32()
 
     return atom
 }

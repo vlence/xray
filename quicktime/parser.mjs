@@ -17,6 +17,7 @@ import { kmatAtomParser } from './atom.kmat.mjs'
 import { stsdAtomParser } from './atom.stsd.mjs'
 import { freeAtomParser } from './atom.free.mjs'
 import { skipAtomParser } from './atom.skip.mjs'
+import { wideAtomParser } from './atom.wide.mjs'
 
 const log = console
 
@@ -36,6 +37,7 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('ftyp', ftypAtomParser)
         this.defineParser('free', freeAtomParser)
         this.defineParser('skip', skipAtomParser)
+        this.defineParser('wide', wideAtomParser)
         this.defineParser('moov', moovAtomParser)
         this.defineParser('mvhd', mvhdAtomParser)
         this.defineParser('trak', trakAtomParser)

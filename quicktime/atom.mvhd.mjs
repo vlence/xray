@@ -150,6 +150,7 @@ export async function mvhdAtomParser(reader, atomTemplate, scanner) {
 
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type
+    atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
     atom.version = await reader.readUint8()

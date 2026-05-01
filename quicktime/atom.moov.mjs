@@ -34,6 +34,7 @@ export async function moovAtomParser(reader, atomTemplate, scanner) {
 
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type
+    atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
     let bytesRemaining = atom.getDataSize()

@@ -8,6 +8,13 @@ import { prflAtomParser } from './atom.prfl.mjs'
 import { clipAtomParser } from './atom.clip.mjs'
 import { crgnAtomParser } from './atom.crgn.mjs'
 import { tkhdAtomParser } from './atom.tkhd.mjs'
+import { taptAtomParser } from './atom.tapt.mjs'
+import { clefAtomParser } from './atom.clef.mjs'
+import { profAtomParser } from './atom.prof.mjs'
+import { enofAtomParser } from './atom.enof.mjs'
+import { mattAtomParser } from './atom.matt.mjs'
+import { kmatAtomParser } from './atom.kmat.mjs'
+import { stsdAtomParser } from './atom.stsd.mjs'
 
 const log = console
 
@@ -33,5 +40,12 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('clip', clipAtomParser)
         this.defineParser('crgn', crgnAtomParser)
         this.defineParser('tkhd', tkhdAtomParser)
+        this.defineParser('tapt', taptAtomParser)
+        this.defineParser('clef', clefAtomParser)
+        this.defineParser('prof', profAtomParser)
+        this.defineParser('enof', enofAtomParser)
+        this.defineParser('matt', mattAtomParser)
+        this.defineParser('kmat', kmatAtomParser)
+        this.defineParser('stsd', stsdAtomParser)
     }
 }

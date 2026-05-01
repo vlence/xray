@@ -16,14 +16,16 @@ export default class Atom {
     size = 0
 
     /**
-     * The type of this atom. Contains the bytes that
-     * make up the type field of the atom.
+     * The type of this atom.
      *
-     * To read get the type as a string call getTypeString().
-     *
-     * @type {Uint8Array<ArrayBuffer>}
+     * @type {string}
      */
     type
+
+    /**
+     * The bytes making up the `type` field of the atom.
+     */
+    typeBytes = new Uint8Array(4)
 
     /**
      * The extended size of this atom. Set only when
@@ -53,7 +55,7 @@ export default class Atom {
      * that can be decoded as an ascii string.
      */
     getTypeString() {
-        return textDecoders.get('ascii').decode(this.type)
+        return this.type
     }
 
     /**

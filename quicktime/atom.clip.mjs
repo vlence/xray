@@ -25,6 +25,7 @@ export async function clipAtomParser(reader, atomTemplate, scanner) {
     const atom = new ClipAtom()
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type
+    atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
     for (const nextAtom of scanner) {

@@ -50,6 +50,7 @@ export async function prflAtomParser(reader, atomTemplate, scanner) {
     const atom = new PrflAtom()
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type
+    atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
     await reader.read(4) // reserved field

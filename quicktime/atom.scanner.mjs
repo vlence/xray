@@ -2,6 +2,7 @@ import Atom from './atom.mjs'
 import ByteReader from '../utils/bytereader.mjs'
 import MacintoshDate from './date.mjs'
 import Matrix from './matrix.mjs'
+import * as textDecoders from '../utils/textdecoder.mjs'
 
 const log = console
 
@@ -66,6 +67,7 @@ export default class AtomScanner {
 
     async *[Symbol.asyncIterator]() {
         const reader = this.#reader
+        const ascii = textDecoders.get('ascii')
 
         while (!reader.done()) {
             let atom = new Atom()
@@ -76,19 +78,19 @@ export default class AtomScanner {
                 break
             }
 
-            atom.type = new Uint8Array(4)
-            await reader.read(atom.type)
+            await reader.read(atom.typeBytes)
+            atom.type = ascii.decode(atom.typeBytes)
 
             if (atom.usesExtendedSize()) {
                 atom.extendedSize = await reader.readBigUint64()
             }
 
-            let parse = this.#parsers.get(this.#typeToNumber(atom.type))
+            let parse = this.#parsers.get(this.#typeToNumber(atom.typeBytes))
             if (parse) {
                 atom = await parse(reader, atom, this)
             }
             else {
-                log.info(`${atom.getTypeString()} [${atom.type.toString()}]: no parser found; skipping ${atom.getDataSize()} bytes`)
+                log.info(`${atom.type} [${atom.typeBytes}]: no parser found; skipping ${atom.getDataSize()} bytes`)
                 await reader.skip(atom.getDataSize())
             }
 

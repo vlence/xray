@@ -7,6 +7,7 @@ import AtomScanner, { AtomByteReader } from "./atom.scanner.mjs";
 import TaptAtom from "./atom.tapt.mjs";
 import TkhdAtom from "./atom.tkhd.mjs";
 import TrefAtom from "./atom.tref.mjs";
+import TxasAtom from "./atom.txas.mjs";
 import UdtaAtom from "./atom.udta.mjs";
 
 const log = console
@@ -55,9 +56,12 @@ export default class TrakAtom extends Atom {
     relationships
 
     /**
-     * @type {}
+     * If this atom is present then this track should be excluded from
+     * automatic selection.
+     *
+     * @type {TxasAtom?}
      */
-    txas
+    excludeFromAutomaticSelection
 
     /**
      * @type {}
@@ -123,6 +127,9 @@ export async function trakAtomParser(reader, atomTemplate, scanner) {
         }
         else if (nextAtom instanceof TrefAtom) {
             atom.relationships = nextAtom
+        }
+        else if (nextAtom instanceof TxasAtom) {
+            atom.excludeFromAutomaticSelection = nextAtom
         }
         else {
             log.warn('trak: unexpected atom ' + nextAtom.type)

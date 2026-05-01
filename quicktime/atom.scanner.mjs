@@ -91,7 +91,7 @@ export default class AtomScanner {
             }
             else {
                 log.info(`${atom.type} [${atom.typeBytes}]: no parser found; skipping ${atom.getDataSize()} bytes`)
-                await reader.skip(atom.getDataSize())
+                atom.data = await reader.readBlob(atom.getDataSize())
             }
 
             yield atom

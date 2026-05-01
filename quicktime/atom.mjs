@@ -50,6 +50,13 @@ export default class Atom {
     children = []
 
     /**
+     * This atom's data.
+     *
+     * @type {Blob?}
+     */
+    data
+
+    /**
      * Returns the type of this atom as an ascii
      * string. Note that not all atoms have a type
      * that can be decoded as an ascii string.

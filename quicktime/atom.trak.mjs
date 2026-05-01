@@ -6,6 +6,7 @@ import PrflAtom from "./atom.prfl.mjs";
 import AtomScanner, { AtomByteReader } from "./atom.scanner.mjs";
 import TaptAtom from "./atom.tapt.mjs";
 import TkhdAtom from "./atom.tkhd.mjs";
+import UdtaAtom from "./atom.udta.mjs";
 
 const log = console
 
@@ -46,6 +47,7 @@ export default class TrakAtom extends Atom {
     edit
 
     /**
+     *
      * @type {}
      */
     tref
@@ -71,9 +73,9 @@ export default class TrakAtom extends Atom {
     mdia
 
     /**
-     * @type {}
+     * @type {userData}
      */
-    udta
+    userData
 }
 
 /**
@@ -113,6 +115,9 @@ export async function trakAtomParser(reader, atomTemplate, scanner) {
         }
         else if (nextAtom instanceof EdtsAtom) {
             atom.edit = nextAtom
+        }
+        else if (nextAtom instanceof UdtaAtom) {
+            atom.userData = nextAtom
         }
         else {
             log.warn('trak: unexpected atom ' + nextAtom.type)

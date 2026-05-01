@@ -53,6 +53,9 @@ export async function moovAtomParser(reader, atomTemplate, scanner) {
         else if (nextAtom instanceof ClipAtom) {
             atom.clip = nextAtom
         }
+        else {
+            log.warn('moov: unexpected atom ' + nextAtom.type)
+        }
 
         if (bytesRemaining == 0) {
             break

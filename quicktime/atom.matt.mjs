@@ -2,6 +2,8 @@ import KmatAtom from './atom.kmat.mjs'
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
+const log = console
+
 /**
  * The track matte atom. This atom is used to visually blend the
  * track's image when it is displayed.
@@ -33,11 +35,14 @@ export async function mattAtomParser(reader, atomTemplate, scanner) {
     atom.extendedSize = atomTemplate.extendedSize
 
     for await (const nextAtom of scanner) {
+        atom.children.push(nextAtom)
+
         if (nextAtom instanceof KmatAtom) {
             atom.kmat = nextAtom
+            break
         }
         else {
-            throw new Error('unexpected atom ' + atom.getTypeString())
+            log.warn('matt: unexpected atom ' + nextAtom.getTypeString())
         }
     }
 

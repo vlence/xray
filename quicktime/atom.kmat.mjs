@@ -2,6 +2,8 @@ import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import StsdAtom from './atom.stsd.mjs'
 
+const log = console
+
 /**
  * The compressed matte atom. This atom specifies the image description
  * structure and the matte data associated with a particular matte atom.
@@ -48,13 +50,15 @@ export async function kmatAtomParser(reader, atomTemplate, scanner) {
     let bytesRemaining = atom.getDataSize() - 1 - 3
 
     for await (const nextAtom of scanner) {
+        atom.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
 
         if (nextAtom instanceof StsdAtom) {
             atom.videoSampleDescription = nextAtom
+            break
         }
         else {
-            throw new Error('unexpected atom ' + nextAtom.getTypeString())
+            log.warn('kmat: unexpected atom ' + nextAtom.getTypeString())
         }
     }
 

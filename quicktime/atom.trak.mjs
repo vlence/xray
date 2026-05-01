@@ -1,10 +1,13 @@
 import ClipAtom from "./atom.clip.mjs";
+import EdtsAtom from "./atom.edts.mjs";
 import MattAtom from "./atom.matt.mjs";
 import Atom from "./atom.mjs";
 import PrflAtom from "./atom.prfl.mjs";
 import AtomScanner, { AtomByteReader } from "./atom.scanner.mjs";
 import TaptAtom from "./atom.tapt.mjs";
 import TkhdAtom from "./atom.tkhd.mjs";
+
+const log = console
 
 /**
  * The trak atom.
@@ -13,34 +16,34 @@ import TkhdAtom from "./atom.tkhd.mjs";
  */
 export default class TrakAtom extends Atom {
     /** @type {PrflAtom} */
-    prfl
+    profile
 
     /**
      * Specifies that characteristics of this track.
      *
      * @type {TkhdAtom}
      */
-    tkhd
+    header
 
     /**
      * @type {ClipAtom}
      */
-    clip
+    clipping
 
     /**
      * @type {TaptAtom}
      */
-    tapt
+    apertureModeDimensions
 
     /**
      * @type {}
      */
-    matt
+    matte
 
     /**
      * @type {}
      */
-    edts
+    edit
 
     /**
      * @type {}
@@ -94,21 +97,26 @@ export async function trakAtomParser(reader, atomTemplate, scanner) {
         bytesRemaining -= nextAtom.getSize()
 
         if (nextAtom instanceof PrflAtom) {
-            atom.prfl = nextAtom
+            atom.profile = nextAtom
         }
         else if (nextAtom instanceof TkhdAtom) {
-            atom.tkhd = nextAtom
+            atom.header = nextAtom
         }
         else if (nextAtom instanceof ClipAtom) {
-            atom.clip = nextAtom
+            atom.clipping = nextAtom
         }
         else if (nextAtom instanceof TaptAtom) {
-            atom.tapt = nextAtom
+            atom.apertureModeDimensions = nextAtom
         }
         else if (nextAtom instanceof MattAtom) {
-            atom.matt = nextAtom
+            atom.matte = nextAtom
         }
-        else {}
+        else if (nextAtom instanceof EdtsAtom) {
+            atom.edit = nextAtom
+        }
+        else {
+            log.warn('trak: unexpected atom ' + nextAtom.type)
+        }
 
         if (bytesRemaining == 0) {
             break

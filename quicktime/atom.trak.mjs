@@ -6,6 +6,7 @@ import PrflAtom from "./atom.prfl.mjs";
 import AtomScanner, { AtomByteReader } from "./atom.scanner.mjs";
 import TaptAtom from "./atom.tapt.mjs";
 import TkhdAtom from "./atom.tkhd.mjs";
+import TrefAtom from "./atom.tref.mjs";
 import UdtaAtom from "./atom.udta.mjs";
 
 const log = console
@@ -37,20 +38,21 @@ export default class TrakAtom extends Atom {
     apertureModeDimensions
 
     /**
-     * @type {}
+     * @type {MattAtom}
      */
     matte
 
     /**
-     * @type {}
+     * @type {EdtsAtom}
      */
     edit
 
     /**
+     * Relationships between this track and other tracks.
      *
-     * @type {}
+     * @type {TrefAtom}
      */
-    tref
+    relationships
 
     /**
      * @type {}
@@ -118,6 +120,9 @@ export async function trakAtomParser(reader, atomTemplate, scanner) {
         }
         else if (nextAtom instanceof UdtaAtom) {
             atom.userData = nextAtom
+        }
+        else if (nextAtom instanceof TrefAtom) {
+            atom.relationships = nextAtom
         }
         else {
             log.warn('trak: unexpected atom ' + nextAtom.type)

@@ -1,6 +1,7 @@
 import ElngAtom from './atom.elng.mjs'
 import HdlrAtom from './atom.hdlr.mjs'
 import MdhdAtom from './atom.mdhd.mjs'
+import MinfAtom from './atom.minf.mjs'
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import UdtaAtom from './atom.udta.mjs'
@@ -34,6 +35,9 @@ export default class MdiaAtom extends Atom {
      */
     handler
 
+    /**
+     * @type {MinfAtom}
+     */
     mediaInformation
 
     /**
@@ -75,6 +79,9 @@ export async function mdiaAtomParser(reader, atomTemplate, scanner) {
         }
         else if (nextAtom instanceof HdlrAtom) {
             atom.handler = nextAtom
+        }
+        else if (nextAtom instanceof MinfAtom) {
+            atom.mediaInformation = nextAtom
         }
         else {
             log.warn('mdia: unexpected child atom ' + nextAtom.type)

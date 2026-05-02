@@ -30,6 +30,7 @@ import { mdiaAtomParser } from './atom.mdia.mjs'
 import { mdhdAtomParser } from './atom.mdhd.mjs'
 import { elngAtomParser } from './atom.elng.mjs'
 import { hdlrAtomParser } from './atom.hdlr.mjs'
+import { minfAtomParser } from './atom.minf.mjs'
 
 const log = console
 
@@ -80,5 +81,6 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('mdhd', mdhdAtomParser)
         this.defineParser('elng', elngAtomParser)
         this.defineParser('hdlr', hdlrAtomParser)
+        this.defineParser('minf', minfAtomParser)
     }
 }

@@ -28,6 +28,7 @@ import { loadAtomParser } from './atom.load.mjs'
 import { imapAtomParser, inputTypeAtomParser, objectIDAtomParser, trackInputAtomParser } from './atom.imap.mjs'
 import { mdiaAtomParser } from './atom.mdia.mjs'
 import { mdhdAtomParser } from './atom.mdhd.mjs'
+import { elngAtomParser } from './atom.elng.mjs'
 
 const log = console
 
@@ -76,5 +77,6 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('obid', objectIDAtomParser)
         this.defineParser('mdia', mdiaAtomParser)
         this.defineParser('mdhd', mdhdAtomParser)
+        this.defineParser('elng', elngAtomParser)
     }
 }

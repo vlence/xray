@@ -44,6 +44,7 @@ export async function taptAtomParser(reader, atomTemplate, scanner) {
 
     for await (const nextAtom of scanner) {
         atom.children.push(nextAtom)
+        nextAtom.parent = atom
         bytesRemaining -= nextAtom.getSize()
 
         if (nextAtom instanceof ClefAtom) {

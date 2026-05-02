@@ -28,14 +28,22 @@ export async function clipAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    for (const nextAtom of scanner) {
+    let bytesRemaining = atom.getDataSize()
+
+    for await (const nextAtom of scanner) {
         atom.children.push(nextAtom)
+        nextAtom.parent = atom
+        bytesRemaining -= nextAtom.getSize()
 
         if (nextAtom instanceof CrgnAtom) {
             atom.crgn = nextAtom
         }
         else {
             log.warn('clip: unexpected child atom', nextAtom)
+        }
+
+        if (bytesRemaining == 0) {
+            break
         }
     }
 

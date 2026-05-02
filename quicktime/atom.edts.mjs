@@ -43,8 +43,12 @@ export async function edtsAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
+    let bytesRemaining = atom.getDataSize()
+
     for await (const nextAtom of scanner) {
         atom.children.push(nextAtom)
+        nextAtom.parent = atom
+        bytesRemaining -= nextAtom.getSize()
 
         if (nextAtom instanceof ElstAtom) {
             atom.editList = nextAtom
@@ -52,6 +56,10 @@ export async function edtsAtomParser(reader, atomTemplate, scanner) {
         }
         else {
             log.warn('edts: unexpected atom ' + nextAtom.type)
+        }
+
+        if (bytesRemaining == 0) {
+            break
         }
     }
 

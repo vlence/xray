@@ -54,6 +54,7 @@ export async function udtaAtomParser(reader, atomTemplate, scanner) {
 
     for await (const nextAtom of scanner) {
         atom.children.push(nextAtom)
+        nextAtom.parent = atom
         bytesRemaining -= nextAtom.getSize()
 
         if (bytesRemaining == 0) {

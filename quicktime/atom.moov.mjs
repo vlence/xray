@@ -63,9 +63,9 @@ export async function moovAtomParser(reader, atomTemplate, scanner) {
     let bytesRemaining = atom.getDataSize()
 
     for await (const nextAtom of scanner) {
-        bytesRemaining -= nextAtom.getSize()
-
         atom.children.push(nextAtom)
+        nextAtom.parent = atom
+        bytesRemaining -= nextAtom.getSize()
 
         if (nextAtom instanceof MvhdAtom) {
             atom.header = nextAtom

@@ -33,6 +33,7 @@ export async function imapAtomParser(reader, atomTemplate, scanner) {
 
     for await (const nextAtom of scanner) {
         atom.children.push(nextAtom)
+        nextAtom.parent = atom
         bytesRemaining -= nextAtom.getSize()
 
         if (!(nextAtom instanceof TrackInputAtom)) {

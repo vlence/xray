@@ -49,17 +49,18 @@ export async function kmatAtomParser(reader, atomTemplate, scanner) {
 
     let bytesRemaining = atom.getDataSize() - 1 - 3
 
-    for await (const nextAtom of scanner) {
-        atom.children.push(nextAtom)
-        bytesRemaining -= nextAtom.getSize()
+    const iter = scanner[Symbol.asyncIterator]()
+    const nextAtom = await iter.next().then(result => result.value)
 
-        if (nextAtom instanceof StsdAtom) {
-            atom.videoSampleDescription = nextAtom
-            break
-        }
-        else {
-            log.warn('kmat: unexpected atom ' + nextAtom.getTypeString())
-        }
+    atom.children.push(nextAtom)
+    nextAtom.parent = atom
+    bytesRemaining -= nextAtom.getSize()
+
+    if (nextAtom instanceof StsdAtom) {
+        atom.videoSampleDescription = nextAtom
+    }
+    else {
+        log.warn('kmat: unexpected atom ' + nextAtom.getTypeString())
     }
 
     atom.matteData = await reader.readBlob(bytesRemaining)

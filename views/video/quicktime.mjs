@@ -4,6 +4,10 @@ import FtypAtom from '../../quicktime/atom.ftyp.mjs'
 import streamToBlob from '../../utils/streamtoblob.mjs'
 import Atom from '../../quicktime/atom.mjs'
 import MvhdAtom from '../../quicktime/atom.mvhd.mjs'
+import TkhdAtom from '../../quicktime/atom.tkhd.mjs'
+import TrakAtom from '../../quicktime/atom.trak.mjs'
+import MoovAtom from '../../quicktime/atom.moov.mjs'
+import Matrix from '../../quicktime/matrix.mjs'
 
 const log = console
 
@@ -150,6 +154,10 @@ export default class QuickTimeRenderer extends Renderer {
             case 'mvhd':
                 this.#renderMvhdAtomDetails(atom, atomDiv)
                 break
+
+            case 'tkhd':
+                this.#renderTkhdAtomDetails(atom, atomDiv)
+                break
         }
     }
 
@@ -180,10 +188,77 @@ export default class QuickTimeRenderer extends Renderer {
     }
 
     /**
-     * @param {MvhdAtom} atom
-     * @param {HTMLElement} atomDiv
+     * @param {TkhdAtom} atom
+     * @param {HTMLDetailsElement} atomElem
      */
-    #renderMvhdAtomDetails(atom, atomDiv) {
+    #renderTkhdAtomDetails(atom, atomElem) {
+        /** @type {TrakAtom} */
+        const trak = atom.parent
+        /** @type {MoovAtom} */
+        const moov = trak.parent
+        const mvhd = moov.header
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags.map(flag => flag.toString(16).padStart(2, '0')).join('')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Creation time</th>
+                <td>${atom.creationTime.toLocaleString()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Modification time</th>
+                <td>${atom.modificationTime.toLocaleString()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Track ID</th>
+                <td>${atom.id}</td>
+            </tr>
+            <tr>
+                <th scope="row">Duration</th>
+                <td>${atom.duration / mvhd.timeScale}s</td>
+            </tr>
+            <tr>
+                <th scope="row">Layer</th>
+                <td>${atom.layer}</td>
+            </tr>
+            <tr>
+                <th scope="row">Alternate group</th>
+                <td>${atom.alternateGroup}</td>
+            </tr>
+            <tr>
+                <th scope="row">Volume</th>
+                <td>${atom.volume * 100}%</td>
+            </tr>
+            <tr>
+                <th scope="row">Matrix</th>
+                <td>${this.#renderMatrix(atom.matrix)}</td>
+            </tr>
+            <tr>
+                <th scope="row">Width</th>
+                <td>${atom.width}</td>
+            </tr>
+            <tr>
+                <th scope="row">Height</th>
+                <td>${atom.height}</td>
+            </tr>
+        </table>`
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {MvhdAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderMvhdAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -222,29 +297,7 @@ export default class QuickTimeRenderer extends Renderer {
             </tr>
             <tr>
                 <th scope="row">Matrix structure</th>
-                <td><math>
-                    <mrow>
-                        <mo>[</mo>
-                        <mtable>
-                            <mtr>
-                                <mtd><mn>${atom.matrixStructure.a}</mn></mtd>
-                                <mtd><mn>${atom.matrixStructure.b}</mn></mtd>
-                                <mtd><mn>${atom.matrixStructure.u}</mn></mtd>
-                            </mtr>
-                            <mtr>
-                                <mtd><mn>${atom.matrixStructure.c}</mn></mtd>
-                                <mtd><mn>${atom.matrixStructure.d}</mn></mtd>
-                                <mtd><mn>${atom.matrixStructure.v}</mn></mtd>
-                            </mtr>
-                            <mtr>
-                                <mtd><mn>${atom.matrixStructure.x}</mn></mtd>
-                                <mtd><mn>${atom.matrixStructure.y}</mn></mtd>
-                                <mtd><mn>${atom.matrixStructure.w}</mn></mtd>
-                            </mtr>
-                        </mtable>
-                        <mo>]</mo>
-                    </mrow>
-                </math></td>
+                <td>${this.#renderMatrix(atom.matrixStructure)}</td>
             </tr>
             <tr>
                 <th scope="row">Preview time</th>
@@ -276,7 +329,36 @@ export default class QuickTimeRenderer extends Renderer {
             </tr>
         `
 
-        atomDiv.appendChild(details)
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {Matrix} matrix
+     */
+    #renderMatrix(matrix) {
+        return `<math>
+            <mrow>
+                <mo>[</mo>
+                <mtable>
+                    <mtr>
+                        <mtd><mn>${matrix.a}</mn></mtd>
+                        <mtd><mn>${matrix.b}</mn></mtd>
+                        <mtd><mn>${matrix.u}</mn></mtd>
+                    </mtr>
+                    <mtr>
+                        <mtd><mn>${matrix.c}</mn></mtd>
+                        <mtd><mn>${matrix.d}</mn></mtd>
+                        <mtd><mn>${matrix.v}</mn></mtd>
+                    </mtr>
+                    <mtr>
+                        <mtd><mn>${matrix.x}</mn></mtd>
+                        <mtd><mn>${matrix.y}</mn></mtd>
+                        <mtd><mn>${matrix.w}</mn></mtd>
+                    </mtr>
+                </mtable>
+                <mo>]</mo>
+            </mrow>
+        </math>`
     }
 
     unmount() {}

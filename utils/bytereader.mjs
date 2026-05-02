@@ -1,4 +1,7 @@
+import * as textDecoders from './textdecoder.mjs'
+
 const log = console
+const ascii = textDecoders.get('ascii')
 
 /**
  * Reader that can read or skip bytes from 
@@ -98,7 +101,7 @@ export default class ByteReader {
                 buf.set(this.#chunk, idx)
                 bytesRead += n
 
-                const {done, value: chunk} = await this.#reader.read()
+                const { done, value: chunk } = await this.#reader.read()
                 this.#done = done
                 this.#chunk = chunk
 
@@ -110,7 +113,7 @@ export default class ByteReader {
                 idx += this.#chunk.byteLength
                 bytesRead += this.#chunk.byteLength
 
-                const {done, value: chunk} = await this.#reader.read()
+                const { done, value: chunk } = await this.#reader.read()
                 this.#done = done
                 this.#chunk = chunk
             }
@@ -316,6 +319,26 @@ export default class ByteReader {
     }
 
     /**
+     * Read `strlen` bytes, parse it as UTF-8 string and return it.
+     *
+     * @param {number} strlen
+     *
+     * @returns {Promise<string>}
+     */
+    async readUtf8String(strlen) {
+        if (strlen == 0) {
+            return ''
+        }
+
+        const buf = new Uint8Array(strlen)
+        await this.read(buf)
+
+        const str = ascii.decode(buf)
+
+        return str
+    }
+
+    /**
      * Read `n` bytes and discard them. The logic is essentially
      * the same as `read()` but internally the bytes being read
      * are not stored so we're saving on some memory allocation.
@@ -359,7 +382,7 @@ export default class ByteReader {
                 len = 0
             }
             else if (len == this.#chunk.byteLength) {
-                const {done, value: chunk} = await this.#reader.read()
+                const { done, value: chunk } = await this.#reader.read()
                 this.#done = done
                 this.#chunk = chunk
                 len = 0
@@ -367,7 +390,7 @@ export default class ByteReader {
             else {
                 len -= this.#chunk.byteLength
 
-                const {done, value: chunk} = await this.#reader.read()
+                const { done, value: chunk } = await this.#reader.read()
                 this.#done = done
                 this.#chunk = chunk
             }

@@ -3,6 +3,7 @@ import ByteReader from '../utils/bytereader.mjs'
 import MacintoshDate from './date.mjs'
 import Matrix from './matrix.mjs'
 import * as textDecoders from '../utils/textdecoder.mjs'
+import Color from './color.mjs'
 
 const log = console
 
@@ -174,29 +175,18 @@ export class AtomByteReader extends ByteReader {
         matrix.x = await this.readFixed32()
         matrix.y = await this.readFixed32()
         matrix.w = await this.readFixed32(2)
-        
+
         return matrix
     }
 
-    /**
-     * @param {number|bigint} n
-     */
-    #validateSize(n) {
-        if (typeof n != 'number') {
-            throw new Error('n must be a number')
-        }
+    async readColor() {
+        const color = new Color()
 
-        if (isNaN(n)) {
-            throw new Error('n must not be NaN')
-        }
+        color.red = await this.readUint16()
+        color.green = await this.readUint16()
+        color.blue = await this.readUint16()
 
-        if (n < 0) {
-            throw new RangeError('n must be a non-negative integer')
-        }
-
-        if (n >= 0x80_000_000) {
-            throw new RangeError('n must be less than ' + 0x80_000_000.toString(10))
-        }
+        return color
     }
 }
 

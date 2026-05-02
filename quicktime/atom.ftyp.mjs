@@ -8,13 +8,13 @@ import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/file_type_compatibility_atom}
  */
 export default class FtypAtom extends Atom {
-    /** @type {Uint8Array<ArrayBuffer>} */
-    majorBrand = new Uint8Array(4)
+    /** @type {string} */
+    majorBrand
 
-    /** @type {Uint8Array<ArrayBuffer>} */
-    minorBrand = new Uint8Array(4)
+    /** @type {string} */
+    minorBrand
 
-    /** @type {Uint8Array<ArrayBuffer>[]?} */
+    /** @type {string[]} */
     compatibleBrands = []
 
     getMajorBrandString() {
@@ -47,15 +47,13 @@ export async function ftypAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    await reader.read(atom.majorBrand)
-    await reader.read(atom.minorBrand)
+    atom.majorBrand = await reader.readUtf8String(4)
+    atom.minorBrand = await reader.readUtf8String(4)
 
     let bytesRemaining = atom.getDataSize() - 8
 
     while (bytesRemaining > 0) {
-        const brand = new Uint8Array(4)
-        atom.compatibleBrands.push(brand)
-        await reader.read(brand)
+        atom.compatibleBrands.push(await reader.readUtf8String(4))
         bytesRemaining -= 4
     }
 

@@ -89,15 +89,12 @@ export async function hdlrAtomParser(reader, atomTemplate, scanner) {
     await reader.skip(4) // component mask
     bytesRemaining -= 4
 
-    // assuming component name length is just one byte
-    const strlen = await reader.readUint8()
-    bytesRemaining -= 1
-
-    atom.componentName = await reader.readUtf8String(strlen)
-    bytesRemaining -= strlen
-
     if (bytesRemaining > 0) {
-        await reader.skip(bytesRemaining)
+        // this is supposed to be a counted string i.e. the first
+        // one or two bytes should provide the length of the string
+        // but many encoders don't follow this rule so we simply
+        // read all the remaining bytes as a string
+        atom.componentName = await reader.readUtf8String(bytesRemaining)
     }
 
     return atom

@@ -2,6 +2,8 @@ import Renderer from '../renderer.mjs'
 import QuickTimeParser from '../../quicktime/parser.mjs'
 import FtypAtom from '../../quicktime/atom.ftyp.mjs'
 import streamToBlob from '../../utils/streamtoblob.mjs'
+import Atom from '../../quicktime/atom.mjs'
+import MvhdAtom from '../../quicktime/atom.mvhd.mjs'
 
 const log = console
 
@@ -9,11 +11,13 @@ export default class QuickTimeRenderer extends Renderer {
     /** @type {HTMLElement} */
     #container
 
+    /** @type {HTMLElement} */
+    #atomsContainer
+
     constructor() {
         super()
 
         const div = document.createElement('div')
-
         div.innerHTML = `<video style="width: 100%;" controls></video>`
 
         this.#container = div
@@ -85,6 +89,194 @@ export default class QuickTimeRenderer extends Renderer {
             log.debug(atom)
             atoms.push(atom)
         }
+
+        const atomsContainer = document.createElement('div')
+        atomsContainer.classList.add('atoms')
+
+        for (const atom of atoms) {
+            const atomDiv = this.#renderAtom(atom)
+            atomsContainer.appendChild(atomDiv)
+        }
+
+        if (this.#atomsContainer) {
+            this.#container.removeChild(this.#atomsContainer)
+        }
+
+        this.#container.appendChild(atomsContainer)
+        this.#atomsContainer = atomsContainer
+    }
+
+    /**
+     * @param {Atom} atom
+     */
+    #renderAtom(atom) {
+        const childrenDiv = document.createElement('div')
+        childrenDiv.classList.add('children')
+
+        for (const child of atom.children) {
+            childrenDiv.appendChild(this.#renderAtom(child))
+        }
+
+        const atomDetails = document.createElement('details')
+        atomDetails.classList.add('atom')
+        atomDetails.style.padding = '0.5em'
+        atomDetails.style.marginTop = '0.5em'
+        atomDetails.style.border = '1px solid black'
+        atomDetails.style.textAlign = 'left'
+        atomDetails.open = false
+
+        atomDetails.innerHTML = `<summary>
+            ${atom.type} [${atom.typeBytes.join(', ')}], ${atom.size || atom.extendedSize} bytes
+        </summary>`
+
+        this.#renderAtomDetails(atom, atomDetails)
+
+        atomDetails.appendChild(childrenDiv)
+
+        return atomDetails
+    }
+
+
+    /**
+     * @param {Atom} atom
+     * @param {HTMLElement} atomDiv
+     */
+    #renderAtomDetails(atom, atomDiv) {
+        switch (atom.type) {
+            case 'ftyp':
+                this.#renderFtypAtomDetails(atom, atomDiv)
+                break
+
+            case 'mvhd':
+                this.#renderMvhdAtomDetails(atom, atomDiv)
+                break
+        }
+    }
+
+    /**
+     * @param {FtypAtom} atom
+     * @param {HTMLElement} atomDiv
+     */
+    #renderFtypAtomDetails(atom, atomDiv) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `
+            <tr>
+                <th scope="row">Major brand</th>
+                <td>${atom.majorBrand}</td>
+            </tr>
+            <tr>
+                <th scope="row">Minor brand</th>
+                <td>${atom.minorBrand}</td>
+            </tr>
+            <tr>
+                <th scope="row">Compatible brand</th>
+                <td>${atom.compatibleBrands.join(', ')}</td>
+            </tr>
+        `
+
+        atomDiv.appendChild(details)
+    }
+
+    /**
+     * @param {MvhdAtom} atom
+     * @param {HTMLElement} atomDiv
+     */
+    #renderMvhdAtomDetails(atom, atomDiv) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>${atom.flags}</td>
+            </tr>
+            <tr>
+                <th scope="row">Creation time</th>
+                <td>${atom.creationTime.toLocaleString()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Modification time</th>
+                <td>${atom.modificationTime.toLocaleString()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Time scale</th>
+                <td>${atom.timeScale}</td>
+            </tr>
+            <tr>
+                <th scope="row">Duration</th>
+                <td>${atom.duration / atom.timeScale}s</td>
+            </tr>
+            <tr>
+                <th scope="row">Preferred rate</th>
+                <td>${atom.preferredRate}x</td>
+            </tr>
+            <tr>
+                <th scope="row">Preferred volume</th>
+                <td>${atom.preferredVolume * 100}%</td>
+            </tr>
+            <tr>
+                <th scope="row">Matrix structure</th>
+                <td><math>
+                    <mrow>
+                        <mo>[</mo>
+                        <mtable>
+                            <mtr>
+                                <mtd><mn>${atom.matrixStructure.a}</mn></mtd>
+                                <mtd><mn>${atom.matrixStructure.b}</mn></mtd>
+                                <mtd><mn>${atom.matrixStructure.u}</mn></mtd>
+                            </mtr>
+                            <mtr>
+                                <mtd><mn>${atom.matrixStructure.c}</mn></mtd>
+                                <mtd><mn>${atom.matrixStructure.d}</mn></mtd>
+                                <mtd><mn>${atom.matrixStructure.v}</mn></mtd>
+                            </mtr>
+                            <mtr>
+                                <mtd><mn>${atom.matrixStructure.x}</mn></mtd>
+                                <mtd><mn>${atom.matrixStructure.y}</mn></mtd>
+                                <mtd><mn>${atom.matrixStructure.w}</mn></mtd>
+                            </mtr>
+                        </mtable>
+                        <mo>]</mo>
+                    </mrow>
+                </math></td>
+            </tr>
+            <tr>
+                <th scope="row">Preview time</th>
+                <td>${atom.previewTime}s</td>
+            </tr>
+            <tr>
+                <th scope="row">Preview duration</th>
+                <td>${atom.previewDuration / atom.timeScale}s</td>
+            </tr>
+            <tr>
+                <th scope="row">Poster time</th>
+                <td>${atom.posterTime}s</td>
+            </tr>
+            <tr>
+                <th scope="row">Selection time</th>
+                <td>${atom.selectionTime}s</td>
+            </tr>
+            <tr>
+                <th scope="row">Selection duration</th>
+                <td>${atom.selectionDuration / atom.timeScale}s</td>
+            </tr>
+            <tr>
+                <th scope="row">Current time</th>
+                <td>${atom.currentTime}s</td>
+            </tr>
+            <tr>
+                <th scope="row">Next track ID</th>
+                <td>${atom.nextTrackID}</td>
+            </tr>
+        `
+
+        atomDiv.appendChild(details)
     }
 
     unmount() {}

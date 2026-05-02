@@ -20,7 +20,7 @@ export default class ElstAtom extends Atom {
     flags = new Uint8Array(3)
 
     /** @type {EditListTableEntry[]} */
-    table = []
+    entries = []
 }
 
 export class EditListTableEntry {
@@ -79,7 +79,7 @@ export async function elstAtomParser(reader, atomTemplate, scanner) {
         entry.mediaTime = await reader.readInt32()
         entry.mediaRate = await reader.readFixed32()
 
-        atom.table.push(entry)
+        atom.entries.push(entry)
     }
 
     return atom

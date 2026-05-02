@@ -8,6 +8,7 @@ import TkhdAtom from '../../quicktime/atom.tkhd.mjs'
 import TrakAtom from '../../quicktime/atom.trak.mjs'
 import MoovAtom from '../../quicktime/atom.moov.mjs'
 import Matrix from '../../quicktime/matrix.mjs'
+import ElstAtom from '../../quicktime/atom.elst.mjs'
 
 const log = console
 
@@ -158,6 +159,10 @@ export default class QuickTimeRenderer extends Renderer {
             case 'tkhd':
                 this.#renderTkhdAtomDetails(atom, atomDiv)
                 break
+
+            case 'elst':
+                this.#renderElstAtomDetails(atom, atomDiv)
+                break
         }
     }
 
@@ -185,6 +190,56 @@ export default class QuickTimeRenderer extends Renderer {
         `
 
         atomDiv.appendChild(details)
+    }
+
+    /**
+     * @param {ElstAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderElstAtomDetails(atom, atomElem) {
+        const edts = atom.parent
+        /** @type {TrakAtom} */
+        const trak = edts.parent
+        /** @type {MoovAtom} */
+        const moov = trak.parent
+        const mvhd = moov.header
+
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        const entriesTable = document.createElement('table')
+        entriesTable.innerHTML = `<tr>
+            <th></th>
+            <th scope="col">Duration</th>
+            <th scope="col">Media time</th>
+            <th scope="col">Media rate</th>
+        </tr>`
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags.map(flag => flag.toString(16).padStart(2, '0')).join('')}</td>
+            </tr>
+        </table>`
+
+        for (let i = 0; i < atom.entries.length; i++) {
+            const entry = atom.entries[i]
+            const row = document.createElement('tr')
+            row.innerHTML = `
+                <th scope="col">${i+1}</th>
+                <th scope="col">${entry.trackDuration / mvhd.timeScale}s</th>
+                <th scope="col">${entry.mediaTime / mvhd.timeScale}s</th>
+                <th scope="col">${entry.mediaRate}x</th>
+            `
+            entriesTable.appendChild(row)
+        }
+
+        atomElem.appendChild(details)
+        atomElem.appendChild(entriesTable)
     }
 
     /**

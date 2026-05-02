@@ -1,3 +1,4 @@
+import DinfAtom from './atom.dinf.mjs'
 import HdlrAtom from './atom.hdlr.mjs'
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
@@ -31,6 +32,13 @@ export default class MinfAtom extends Atom {
      * @type {HdlrAtom}
      */
     handler
+
+    /**
+     * Specifies the data handler component that provides access to the
+     * media data.
+     *
+     * @type {DinfAtom}
+     */
     dataInformation
     sampleTable
 }
@@ -61,6 +69,9 @@ export async function minfAtomParser(reader, atomTemplate, scanner) {
         }
         else if (nextAtom instanceof VmhdAtom) {
             atom.videoMediaInformationHeader = nextAtom
+        }
+        else if (nextAtom instanceof DinfAtom) {
+            atom.dataInformation = nextAtom
         }
         else {
             log.warn('minf: unexpected child atom ' + nextAtom.type)

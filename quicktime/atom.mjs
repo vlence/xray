@@ -1,5 +1,3 @@
-import * as textDecoders from '../utils/textdecoder.mjs'
-
 /**
  * A QuickTime atom.
  *

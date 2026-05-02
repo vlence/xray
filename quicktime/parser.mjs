@@ -25,6 +25,7 @@ import { udtaAtomParser } from './atom.udta.mjs'
 import { trefAtomParser } from './atom.tref.mjs'
 import { txasAtomParser } from './atom.txas.mjs'
 import { loadAtomParser } from './atom.load.mjs'
+import { imapAtomParser, inputTypeAtomParser, objectIDAtomParser, trackInputAtomParser } from './atom.imap.mjs'
 
 const log = console
 
@@ -67,5 +68,9 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('tref', trefAtomParser)
         this.defineParser('txas', txasAtomParser)
         this.defineParser('load', loadAtomParser)
+        this.defineParser('imap', imapAtomParser)
+        this.defineParser('\x00 in', trackInputAtomParser)
+        this.defineParser('\x00 ty', inputTypeAtomParser)
+        this.defineParser('obid', objectIDAtomParser)
     }
 }

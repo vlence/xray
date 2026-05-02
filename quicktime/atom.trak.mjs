@@ -65,16 +65,20 @@ export default class TrakAtom extends Atom {
     excludeFromAutomaticSelection
 
     /**
-     * Describes how this track should be used.
+     * Settings that define how this track should be preloaded
+     * and played.
      *
      * @type {LoadAtom}
      */
-    load
+    loadSettings
 
     /**
+     * Defines how data being sent to this track from its nonprimary
+     * sources is to be interpreted.
+     *
      * @type {}
      */
-    imap
+    inputMap
 
     /**
      * @type {}
@@ -135,7 +139,7 @@ export async function trakAtomParser(reader, atomTemplate, scanner) {
             atom.excludeFromAutomaticSelection = nextAtom
         }
         else if (nextAtom instanceof LoadAtom) {
-            atom.load = nextAtom
+            atom.loadSettings = nextAtom
         }
         else {
             log.warn('trak: unexpected atom ' + nextAtom.type)

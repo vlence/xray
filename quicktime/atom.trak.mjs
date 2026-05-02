@@ -1,5 +1,6 @@
 import ClipAtom from "./atom.clip.mjs";
 import EdtsAtom from "./atom.edts.mjs";
+import LoadAtom from "./atom.load.mjs";
 import MattAtom from "./atom.matt.mjs";
 import Atom from "./atom.mjs";
 import PrflAtom from "./atom.prfl.mjs";
@@ -64,7 +65,9 @@ export default class TrakAtom extends Atom {
     excludeFromAutomaticSelection
 
     /**
-     * @type {}
+     * Describes how this track should be used.
+     *
+     * @type {LoadAtom}
      */
     load
 
@@ -130,6 +133,9 @@ export async function trakAtomParser(reader, atomTemplate, scanner) {
         }
         else if (nextAtom instanceof TxasAtom) {
             atom.excludeFromAutomaticSelection = nextAtom
+        }
+        else if (nextAtom instanceof LoadAtom) {
+            atom.load = nextAtom
         }
         else {
             log.warn('trak: unexpected atom ' + nextAtom.type)

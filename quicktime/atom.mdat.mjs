@@ -7,8 +7,6 @@ import Atom from './atom.mjs'
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/movie_data_atom}
  */
 export default class MdatAtom extends Atom {
-    /** @type {Blob} */
-    movieMediaData
 }
 
 /**
@@ -25,7 +23,7 @@ export async function mdatAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
-    atom.movieMediaData = await reader.readBlob(atom.getDataSize())
+    atom.data = await reader.readBlob(atom.getDataSize())
 
     return atom
 }

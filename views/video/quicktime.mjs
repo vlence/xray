@@ -21,6 +21,8 @@ import MfhdAtom from '../../quicktime/atom.mfhd.mjs'
 import TfdtAtom from '../../quicktime/atom.tfdt.mjs'
 import TrunAtom from '../../quicktime/atom.trun.mjs'
 import MetaAtom from '../../quicktime/atom.meta.mjs'
+import TrexAtom from '../../quicktime/atom.trex.mjs'
+import DataAtom from '../../quicktime/atom.data.mjs'
 
 const log = console
 
@@ -165,6 +167,10 @@ export default class QuickTimeRenderer extends Renderer {
                 this.#renderFtypAtomDetails(atom, atomDiv)
                 break
 
+            case 'data':
+                this.#renderDataAtomDetails(atom, atomDiv)
+                break
+
             case 'mvhd':
                 this.#renderMvhdAtomDetails(atom, atomDiv)
                 break
@@ -187,6 +193,10 @@ export default class QuickTimeRenderer extends Renderer {
 
             case 'tfdt':
                 this.#renderTfdtAtomDetails(atom, atomDiv)
+                break
+
+            case 'trex':
+                this.#renderTrexAtomDetails(atom, atomDiv)
                 break
 
             case 'elst':
@@ -242,6 +252,21 @@ export default class QuickTimeRenderer extends Renderer {
                 <th scope="row">Flags</th>
                 <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
             </tr>
+        `
+
+        atomDiv.appendChild(details)
+    }
+
+    /**
+     * @param {DataAtom} atom
+     * @param {HTMLElement} atomDiv
+     */
+    #renderDataAtomDetails(atom, atomDiv) {
+        const details = document.createElement('div')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `
+            ${atom.isString() ? atom.getStringValue() : ''}
         `
 
         atomDiv.appendChild(details)
@@ -762,6 +787,48 @@ export default class QuickTimeRenderer extends Renderer {
             <tr>
                 <th scope="row">Quality</th>
                 <td>${atom.quality}</td>
+            </tr>
+        `
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {TrexAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderTrexAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">id</th>
+                <td>${atom.id}</td>
+            </tr>
+            <tr>
+                <th scope="row">Default sample description index</th>
+                <td>${atom.defaultSampleDescriptionIndex}</td>
+            </tr>
+            <tr>
+                <th scope="row">Default sample duration</th>
+                <td>${atom.defaultSampleDuration}</td>
+            </tr>
+            <tr>
+                <th scope="row">Default sample size</th>
+                <td>${atom.defaultSampleSize}</td>
+            </tr>
+            <tr>
+                <th scope="row">Default sample flags</th>
+                <td>0x${atom.defaultSampleFlags.toString(16).padStart(6, '0')}</td>
             </tr>
         `
 

@@ -1,5 +1,7 @@
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
+import * as Types from './types.mjs'
+import * as textDecoders from '../utils/textdecoder.mjs'
 
 /**
  *
@@ -20,6 +22,24 @@ export default class DataAtom extends Atom {
      * @type {Uint8Array<ArrayBuffer>}
      */
     value
+
+    isString() {
+        return Types.isUTF8(this.typeIndicator)
+            || Types.isUTF16(this.typeIndicator)
+            || Types.isSJIS(this.typeIndicator)
+    }
+
+    getStringValue() {
+        if (Types.isUTF8(this.typeIndicator)) {
+            return textDecoders.get('utf8').decode(this.value)
+        }
+        else if (Types.isUTF16(this.typeIndicator)) {
+            return textDecoders.get('utf16-be').decode(this.value)
+        }
+        else if (Types.isSJIS(this.typeIndicator)) {
+            return textDecoders.get('sjis').decode(this.value)
+        }
+    }
 }
 
 /**

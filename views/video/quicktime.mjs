@@ -10,6 +10,8 @@ import MoovAtom from '../../quicktime/atom.moov.mjs'
 import Matrix from '../../quicktime/matrix.mjs'
 import ElstAtom from '../../quicktime/atom.elst.mjs'
 import BinaryRenderer from '../application/octet-stream.mjs'
+import MdhdAtom from '../../quicktime/atom.mdhd.mjs'
+import * as QuickTimeLanguage from '../../quicktime/language.mjs'
 
 const log = console
 
@@ -156,6 +158,10 @@ export default class QuickTimeRenderer extends Renderer {
 
             case 'mvhd':
                 this.#renderMvhdAtomDetails(atom, atomDiv)
+                break
+
+            case 'mdhd':
+                this.#renderMdhdAtomDetails(atom, atomDiv)
                 break
 
             case 'tkhd':
@@ -340,6 +346,58 @@ export default class QuickTimeRenderer extends Renderer {
                 <td>${atom.height}</td>
             </tr>
         </table>`
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {MdhdAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderMdhdAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Creation time</th>
+                <td>${atom.creationTime.toLocaleString()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Modification time</th>
+                <td>${atom.modificationTime.toLocaleString()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Time scale</th>
+                <td>${atom.timeScale}</td>
+            </tr>
+            <tr>
+                <th scope="row">Duration</th>
+                <td>${atom.duration / atom.timeScale}s</td>
+            </tr>
+            <tr>
+                <th scope="row">Language</th>
+                <td>
+                    ${QuickTimeLanguage.isMacintoshLanguageCode(atom.language)
+                    ? QuickTimeLanguage.getMacintoshLanguageCode(atom.language)
+                    : QuickTimeLanguage.getISOLanguageCode(atom.language)
+                    }
+                    [0x${atom.language.toString(16).padStart(4, '0')}]
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Quality</th>
+                <td>${atom.quality}</td>
+            </tr>
+        `
 
         atomElem.appendChild(details)
     }

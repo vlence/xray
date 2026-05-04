@@ -35,6 +35,7 @@ import { vmhdAtomParser } from './atom.vmhd.mjs'
 import { dinfAtomParser } from './atom.dinf.mjs'
 import { drefAtomParser } from './atom.dref.mjs'
 import { metaAtomParser } from './atom.meta.mjs'
+import { moofAtomParser } from './atom.moof.mjs'
 
 const log = console
 
@@ -87,5 +88,6 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('dinf', dinfAtomParser)
         this.defineParser('dref', drefAtomParser)
         this.defineParser('meta', metaAtomParser)
+        this.defineParser('moof', moofAtomParser)
     }
 }

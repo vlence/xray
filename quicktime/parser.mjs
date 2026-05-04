@@ -45,11 +45,8 @@ const log = console
  * files as well.
  */
 export default class QuickTimeParser extends AtomScanner {
-    /**
-     * @param {ReadableStream<Uint8Array<ArrayBuffer>>} stream
-     */
-    constructor(stream) {
-        super(stream)
+    constructor() {
+        super()
 
         this.defineParser('ftyp', ftypAtomParser)
         this.defineParser('free', freeAtomParser)

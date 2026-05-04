@@ -35,10 +35,13 @@ export default class AtomScanner {
     /** @type {AtomByteReader} */
     #reader
 
+    /** @type {Atom?} */
+    #parentAtom
+
     /**
      * @param {ReadableStream<Uint8Array<Array>>} stream
      */
-    constructor(stream) {
+    init(stream) {
         this.#reader = new AtomByteReader(stream)
     }
 
@@ -86,6 +89,8 @@ export default class AtomScanner {
                 atom.extendedSize = await reader.readBigUint64()
             }
 
+            atom.parent = this.#parentAtom
+
             let parse = this.#parsers.get(this.#typeToNumber(atom.typeBytes))
             if (parse) {
                 atom = await parse(reader, atom, this)
@@ -118,6 +123,19 @@ export default class AtomScanner {
     #typeToNumber(type) {
         this.#validateType(type)
         return new DataView(type.buffer).getUint32()
+    }
+
+    /**
+     * @param {Atom} atom
+     */
+    withParent(atom) {
+        const clone = new AtomScanner()
+        clone.#reader = this.#reader
+        clone.#parsers = this.#parsers
+        clone.#parentAtom = atom
+        clone.#textEncoder = this.#textEncoder
+
+        return clone
     }
 }
 

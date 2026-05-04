@@ -21,10 +21,11 @@ export async function drefAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
+    atom.parent = atomTemplate.parent
 
     atom.versionAndFlags = await reader.readUint32()
 
-    const iter = scanner[Symbol.asyncIterator]()
+    const iter = scanner.withParent(atom)[Symbol.asyncIterator]()
     const entries = await reader.readInt32()
 
     for (let i = 0; i < entries; i++) {
@@ -32,7 +33,6 @@ export async function drefAtomParser(reader, atomTemplate, scanner) {
         // the spec
         const nextAtom = await iter.next().then(result => result.value)
         atom.children.push(nextAtom)
-        nextAtom.parent = atom
     }
 
     return atom

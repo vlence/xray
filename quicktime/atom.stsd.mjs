@@ -44,6 +44,7 @@ export async function stsdAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
+    atom.parent = atomTemplate.parent
 
     atom.versionAndFlags = await reader.readUint32()
 

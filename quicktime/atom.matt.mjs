@@ -33,12 +33,12 @@ export async function mattAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
+    atom.parent = atomTemplate.parent
 
-    const iter = scanner[Symbol.asyncIterator]()
+    const iter = scanner.withParent(atom)[Symbol.asyncIterator]()
     const nextAtom = await iter.next().then(result => result.value)
 
     atom.children.push(nextAtom)
-    nextAtom.parent = atom
 
     if (nextAtom instanceof KmatAtom) {
         atom.kmat = nextAtom

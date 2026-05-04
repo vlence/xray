@@ -46,6 +46,7 @@ export async function crgnAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
+    atom.parent = atomTemplate.parent
 
     atom.regionSize = await reader.readUint16()
     atom.regionBoundaryBox = await reader.readBigUint64()

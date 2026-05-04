@@ -75,6 +75,7 @@ export async function loadAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
+    atom.parent = atomTemplate.parent
 
     atom.preloadStartTime = await reader.readInt32()
     atom.preloadDuration = await reader.readInt32()

@@ -42,12 +42,12 @@ export async function edtsAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
+    atom.parent = atomTemplate.parent
 
     let bytesRemaining = atom.getDataSize()
 
-    for await (const nextAtom of scanner) {
+    for await (const nextAtom of scanner.withParent(atom)) {
         atom.children.push(nextAtom)
-        nextAtom.parent = atom
         bytesRemaining -= nextAtom.getSize()
 
         if (nextAtom instanceof ElstAtom) {

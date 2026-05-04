@@ -23,6 +23,7 @@ export async function mdatAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
+    atom.parent = atomTemplate.parent
     atom.data = await reader.readBlob(atom.getDataSize())
 
     return atom

@@ -40,6 +40,7 @@ export async function udtaAtomParser(reader, atomTemplate, scanner) {
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
+    atom.parent = atomTemplate.parent
 
     let bytesRemaining = atom.getDataSize()
 
@@ -52,9 +53,8 @@ export async function udtaAtomParser(reader, atomTemplate, scanner) {
         return atom
     }
 
-    for await (const nextAtom of scanner) {
+    for await (const nextAtom of scanner.withParent(atom)) {
         atom.children.push(nextAtom)
-        nextAtom.parent = atom
         bytesRemaining -= nextAtom.getSize()
 
         if (bytesRemaining == 0) {

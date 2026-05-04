@@ -2,11 +2,9 @@ import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
- * Found inside udta atom.
+ * Container for metadata.
  *
- * The fields are assumed; don't use them.
- *
- * @see {@link https://mpeggroup.github.io/FileFormatConformance/?query=%3D%22meta%22}
+ * @see {@link https://developer.apple.com/documentation/quicktime-file-format/metadata_atom}
  */
 export default class MetaAtom extends FullAtom {
     /**

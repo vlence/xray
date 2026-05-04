@@ -12,6 +12,7 @@ import ElstAtom from '../../quicktime/atom.elst.mjs'
 import BinaryRenderer from '../application/octet-stream.mjs'
 import MdhdAtom from '../../quicktime/atom.mdhd.mjs'
 import * as QuickTimeLanguage from '../../quicktime/language.mjs'
+import { HandlerReferenceAtom, MetadataHandlerAtom } from '../../quicktime/atom.hdlr.mjs'
 
 const log = console
 
@@ -172,6 +173,15 @@ export default class QuickTimeRenderer extends Renderer {
                 this.#renderElstAtomDetails(atom, atomDiv)
                 break
 
+            case 'hdlr':
+                if (atom instanceof HandlerReferenceAtom) {
+                    this.#renderHandlerReferenceAtomDetails(atom, atomDiv)
+                }
+                else if (atom instanceof MetadataHandlerAtom) {
+                    this.#renderMetadataHandlerAtomDetails(atom, atomDiv)
+                }
+                break
+
             default:
                 if (atom.data != null) {
                     const binaryRenderer = new BinaryRenderer()
@@ -207,6 +217,82 @@ export default class QuickTimeRenderer extends Renderer {
         `
 
         atomDiv.appendChild(details)
+    }
+
+    /**
+     * @param {MetadataHandlerAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderMetadataHandlerAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Handler name</th>
+                <td>${atom.name}</td>
+            </tr>
+            <tr>
+                <th scope="row">Handler type</th>
+                <td>${atom.handlerType}</td>
+            </tr>
+        </table>`
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {HandlerReferenceAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderHandlerReferenceAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Component name</th>
+                <td>${atom.componentName}</td>
+            </tr>
+            <tr>
+                <th scope="row">Component type</th>
+                <td>${atom.componentType}</td>
+            </tr>
+            <tr>
+                <th scope="row">Component subtype</th>
+                <td>${atom.componentSubtype}</td>
+            </tr>
+            <tr>
+                <th scope="row">Component manufacturer</th>
+                <td>${atom.componentManufacturer}</td>
+            </tr>
+            <tr>
+                <th scope="row">Component flags</th>
+                <td>0x${atom.componentFlags.toString(16).padStart(8, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Component flags mask</th>
+                <td>0x${atom.componentFlagsMask.toString(16).padStart(8, '0')}</td>
+            </tr>
+        </table>`
+
+        atomElem.appendChild(details)
     }
 
     /**

@@ -146,8 +146,9 @@ export async function metadataHandlerAtomParser(reader, atomTemplate, scanner) {
 
     atom.versionAndFlags = await reader.readUint32()
     atom.handlerType = await reader.readUtf8String(4)
+    await reader.skip(4 * 3) // reserved
     
-    const bytesRemaining = atom.getDataSize() - 4 - 4
+    const bytesRemaining = atom.getDataSize() - 4 - 4 - (4 * 3)
     atom.name = await reader.readUtf8String(bytesRemaining)
 
     return atom

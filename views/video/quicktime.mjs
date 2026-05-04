@@ -9,6 +9,7 @@ import TrakAtom from '../../quicktime/atom.trak.mjs'
 import MoovAtom from '../../quicktime/atom.moov.mjs'
 import Matrix from '../../quicktime/matrix.mjs'
 import ElstAtom from '../../quicktime/atom.elst.mjs'
+import BinaryRenderer from '../application/octet-stream.mjs'
 
 const log = console
 
@@ -162,6 +163,15 @@ export default class QuickTimeRenderer extends Renderer {
 
             case 'elst':
                 this.#renderElstAtomDetails(atom, atomDiv)
+                break
+
+            default:
+                if (atom.data != null) {
+                    const binaryRenderer = new BinaryRenderer()
+                    const hex = binaryRenderer.render(atom.data)
+                    atomDiv.appendChild(hex)
+                }
+
                 break
         }
     }

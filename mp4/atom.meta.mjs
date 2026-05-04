@@ -1,12 +1,12 @@
-import Atom from './atom.mjs'
-import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
+import Atom, { FullAtom } from '../quicktime/atom.mjs'
+import AtomScanner, { AtomByteReader } from '../quicktime/atom.scanner.mjs'
 
 /**
  * Container for metadata.
  *
- * @see {@link https://developer.apple.com/documentation/quicktime-file-format/metadata_atoms_and_types}
+ * @see {@link https://mpeggroup.github.io/FileFormatConformance/?query=%3D%22meta%22}
  */
-export default class MetaAtom extends Atom {
+export default class MetaAtom extends FullAtom {
 }
 
 /**
@@ -23,6 +23,8 @@ export async function metaAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
     atom.parent = atomTemplate.parent
+
+    atom.versionAndFlags = await reader.readUint32()
 
     let bytesRemaining = atom.getDataSize()
 

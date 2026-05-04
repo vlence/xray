@@ -2,22 +2,20 @@ import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
- * Container for metadata.
- *
- * @see {@link https://developer.apple.com/documentation/quicktime-file-format/metadata_atoms_and_types}
+ * @see {@link https://developer.apple.com/documentation/quicktime-file-format/sample_table_atom}
  */
-export default class MetaAtom extends Atom {
+export default class StblAtom extends Atom {
 }
 
 /**
- * Parses an meta atom's data.
+ * Parses an stbl atom's data.
  *
  * @param {AtomByteReader} reader
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */
-export async function metaAtomParser(reader, atomTemplate, scanner) {
-    const atom = new MetaAtom()
+export async function stblAtomParser(reader, atomTemplate, scanner) {
+    const atom = new StblAtom()
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
@@ -26,12 +24,13 @@ export async function metaAtomParser(reader, atomTemplate, scanner) {
 
     let bytesRemaining = atom.getDataSize()
 
-    const iter = scanner.withParent(atom)[Symbol.asyncIterator]()
-
-    while (bytesRemaining > 0) {
-        const nextAtom = await iter.next().then(result => result.value)
+    for await (const nextAtom of scanner.withParent(atom)) {
         atom.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
+
+        if (bytesRemaining == 0) {
+            break
+        }
     }
 
     return atom

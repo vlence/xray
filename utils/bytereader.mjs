@@ -8,6 +8,8 @@ const ascii = textDecoders.get('ascii')
  * a ReadableStream.
  */
 export default class ByteReader {
+    #bytesRead = 0
+
     /** @type {boolean} */
     #done
 
@@ -42,6 +44,10 @@ export default class ByteReader {
      */
     done() {
         return this.#done
+    }
+
+    bytesRead() {
+        return this.#bytesRead
     }
 
     /**
@@ -118,6 +124,8 @@ export default class ByteReader {
                 this.#chunk = chunk
             }
         }
+        
+        this.#bytesRead += bytesRead
 
         return bytesRead
     }
@@ -379,16 +387,19 @@ export default class ByteReader {
         while (len > 0 && !this.#done) {
             if (len < this.#chunk.byteLength) {
                 this.#chunk = this.#chunk.subarray(len)
+                this.#bytesRead += len
                 len = 0
             }
             else if (len == this.#chunk.byteLength) {
                 const { done, value: chunk } = await this.#reader.read()
                 this.#done = done
                 this.#chunk = chunk
+                this.#bytesRead += len
                 len = 0
             }
             else {
                 len -= this.#chunk.byteLength
+                this.#bytesRead += this.#chunk.byteLength
 
                 const { done, value: chunk } = await this.#reader.read()
                 this.#done = done
@@ -410,14 +421,17 @@ export default class ByteReader {
             if (len > maxUint32BigInt) {
                 this.#skipNumberN(maxUint32)
                 len -= maxUint32BigInt
+                this.#bytesRead += maxUint32
             }
             else if (len == maxUint32BigInt) {
                 this.#skipNumberN(maxUint32)
                 len = 0n
+                this.#bytesRead += maxUint32
             }
             else {
                 this.#skipNumberN(Number(len))
                 len = 0n
+                this.#bytesRead += Number(len)
             }
         }
     }

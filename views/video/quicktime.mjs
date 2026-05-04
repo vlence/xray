@@ -28,10 +28,14 @@ const log = console
 
 export default class QuickTimeRenderer extends Renderer {
     /** @type {HTMLElement} */
-    #container
+    container
 
     /** @type {HTMLElement} */
-    #atomsContainer
+    atomsContainer
+
+    atomDetailsRenderers = {}
+
+    Parser = QuickTimeParser
 
     constructor() {
         super()
@@ -39,7 +43,20 @@ export default class QuickTimeRenderer extends Renderer {
         const div = document.createElement('div')
         div.innerHTML = `<video style="width: 100%;" controls></video>`
 
-        this.#container = div
+        this.container = div
+
+        this.atomDetailsRenderers['ftyp'] = this.renderFtypAtomDetails.bind(this)
+        this.atomDetailsRenderers['data'] = this.renderDataAtomDetails.bind(this)
+        this.atomDetailsRenderers['mvhd'] = this.renderMvhdAtomDetails.bind(this)
+        this.atomDetailsRenderers['mdhd'] = this.renderMdhdAtomDetails.bind(this)
+        this.atomDetailsRenderers['tkhd'] = this.renderTkhdAtomDetails.bind(this)
+        this.atomDetailsRenderers['tfhd'] = this.renderTfhdAtomDetails.bind(this)
+        this.atomDetailsRenderers['mfhd'] = this.renderMfhdAtomDetails.bind(this)
+        this.atomDetailsRenderers['tfdt'] = this.renderTfdtAtomDetails.bind(this)
+        this.atomDetailsRenderers['trex'] = this.renderTrexAtomDetails.bind(this)
+        this.atomDetailsRenderers['trun'] = this.renderTrunAtomDetails.bind(this)
+        this.atomDetailsRenderers['vmhd'] = this.renderVmhdAtomDetails.bind(this)
+        this.atomDetailsRenderers['hdlr'] = this.renderHdlrAtomDetails.bind(this)
     }
 
     /**
@@ -47,46 +64,46 @@ export default class QuickTimeRenderer extends Renderer {
      */
     render(blobOrStream) {
         if (blobOrStream instanceof Blob) {
-            this.#renderBlob(blobOrStream)
+            this.renderBlob(blobOrStream)
         }
         else if (blobOrStream instanceof ReadableStream) {
-            this.#renderStream(blobOrStream)
+            this.renderStream(blobOrStream)
         }
         else {
             throw new TypeError('blobOrStream must be ReadableStream or Blob')
         }
 
-        return this.#container
+        return this.container
     }
 
     /**
      * @param {Blob} blob
      */
-    async #renderBlob(blob) {
+    async renderBlob(blob) {
         return Promise.all([
-            this.#loadAndPlayVideo(blob),
-            this.#parse(blob.stream())
+            this.loadAndPlayVideo(blob),
+            this.parse(blob.stream())
         ])
     }
 
     /**
      * @param {ReadableStream<Uint8Array<ArrayBuffer>>} stream
      */
-    async #renderStream(stream) {
+    async renderStream(stream) {
         const [stream1, stream2] = stream.tee()
 
         return Promise.all([
-            streamToBlob(stream1).then(blob => this.#loadAndPlayVideo(blob)),
-            this.#parse(stream2)
+            streamToBlob(stream1).then(blob => this.loadAndPlayVideo(blob)),
+            this.parse(stream2)
         ])
     }
 
     /**
      * @param {Blob} blob
      */
-    async #loadAndPlayVideo(blob) {
+    async loadAndPlayVideo(blob) {
         /** @type {HTMLVideoElement} */
-        const video = this.#container.querySelector('video')
+        const video = this.container.querySelector('video')
 
         const canPlay = function () {
             video.play()
@@ -100,8 +117,9 @@ export default class QuickTimeRenderer extends Renderer {
     /**
      * @param {ReadableStream<Uint8Array<ArrayBuffer>>} stream
      */
-    async #parse(stream) {
-        const scanner = new QuickTimeParser()
+    async parse(stream) {
+        const Parser = this.Parser
+        const scanner = new Parser()
         scanner.init(stream)
         const atoms = []
 
@@ -114,27 +132,27 @@ export default class QuickTimeRenderer extends Renderer {
         atomsContainer.classList.add('atoms')
 
         for (const atom of atoms) {
-            const atomDiv = this.#renderAtom(atom)
+            const atomDiv = this.renderAtom(atom)
             atomsContainer.appendChild(atomDiv)
         }
 
-        if (this.#atomsContainer) {
-            this.#container.removeChild(this.#atomsContainer)
+        if (this.atomsContainer) {
+            this.container.removeChild(this.atomsContainer)
         }
 
-        this.#container.appendChild(atomsContainer)
-        this.#atomsContainer = atomsContainer
+        this.container.appendChild(atomsContainer)
+        this.atomsContainer = atomsContainer
     }
 
     /**
      * @param {Atom} atom
      */
-    #renderAtom(atom) {
+    renderAtom(atom) {
         const childrenDiv = document.createElement('div')
         childrenDiv.classList.add('children')
 
         for (const child of atom.children) {
-            childrenDiv.appendChild(this.#renderAtom(child))
+            childrenDiv.appendChild(this.renderAtom(child))
         }
 
         const atomDetails = document.createElement('details')
@@ -149,119 +167,48 @@ export default class QuickTimeRenderer extends Renderer {
             ${atom.type} [${atom.typeBytes.join(', ')}], ${atom.size || atom.extendedSize} bytes
         </summary>`
 
-        this.#renderAtomDetails(atom, atomDetails)
+        this.renderAtomDetails(atom, atomDetails)
 
         atomDetails.appendChild(childrenDiv)
 
         return atomDetails
     }
 
+    /**
+     * @param {Atom} atom
+     * @param {HTMLElement} atomDiv
+     */
+    renderHdlrAtomDetails(atom, atomDiv) {
+        if (atom instanceof HandlerReferenceAtom) {
+            this.renderHandlerReferenceAtomDetails(atom, atomDiv)
+        }
+        else if (atom instanceof MetadataHandlerAtom) {
+            this.renderMetadataHandlerAtomDetails(atom, atomDiv)
+        }
+    }
 
     /**
      * @param {Atom} atom
      * @param {HTMLElement} atomDiv
      */
-    #renderAtomDetails(atom, atomDiv) {
-        switch (atom.type) {
-            case 'ftyp':
-                this.#renderFtypAtomDetails(atom, atomDiv)
-                break
-
-            case 'data':
-                this.#renderDataAtomDetails(atom, atomDiv)
-                break
-
-            case 'mvhd':
-                this.#renderMvhdAtomDetails(atom, atomDiv)
-                break
-
-            case 'mdhd':
-                this.#renderMdhdAtomDetails(atom, atomDiv)
-                break
-
-            case 'tkhd':
-                this.#renderTkhdAtomDetails(atom, atomDiv)
-                break
-
-            case 'tfhd':
-                this.#renderTfhdAtomDetails(atom, atomDiv)
-                break
-
-            case 'mfhd':
-                this.#renderMfhdAtomDetails(atom, atomDiv)
-                break
-
-            case 'tfdt':
-                this.#renderTfdtAtomDetails(atom, atomDiv)
-                break
-
-            case 'trex':
-                this.#renderTrexAtomDetails(atom, atomDiv)
-                break
-
-            case 'elst':
-                this.#renderElstAtomDetails(atom, atomDiv)
-                break
-
-            case 'trun':
-                this.#renderTrunAtomDetails(atom, atomDiv)
-                break
-
-            case 'vmhd':
-                this.#renderVmhdAtomDetails(atom, atomDiv)
-                break
-
-            case 'meta':
-                this.#renderMetaAtomDetails(atom, atomDiv)
-                break
-
-            case 'hdlr':
-                if (atom instanceof HandlerReferenceAtom) {
-                    this.#renderHandlerReferenceAtomDetails(atom, atomDiv)
-                }
-                else if (atom instanceof MetadataHandlerAtom) {
-                    this.#renderMetadataHandlerAtomDetails(atom, atomDiv)
-                }
-                break
-
-            default:
-                if (atom.data != null) {
-                    const binaryRenderer = new BinaryRenderer()
-                    const hex = binaryRenderer.render(atom.data)
-                    atomDiv.appendChild(hex)
-                }
-
-                break
+    renderAtomDetails(atom, atomDiv) {
+        const fn = this.atomDetailsRenderers[atom.type]
+        
+        if (fn) {
+            fn(atom, atomDiv)
         }
-    }
-
-    /**
-     * @param {MetaAtom} atom
-     * @param {HTMLElement} atomDiv
-     */
-    #renderMetaAtomDetails(atom, atomDiv) {
-        const details = document.createElement('table')
-        details.style.marginTop = '0.5em'
-
-        details.innerHTML = `
-            <tr>
-                <th scope="row">Version</th>
-                <td>${atom.version()}</td>
-            </tr>
-            <tr>
-                <th scope="row">Flags</th>
-                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
-            </tr>
-        `
-
-        atomDiv.appendChild(details)
+        else if (atom.data != null) {
+            const binaryRenderer = new BinaryRenderer()
+            const hex = binaryRenderer.render(atom.data)
+            atomDiv.appendChild(hex)
+        }
     }
 
     /**
      * @param {DataAtom} atom
      * @param {HTMLElement} atomDiv
      */
-    #renderDataAtomDetails(atom, atomDiv) {
+    renderDataAtomDetails(atom, atomDiv) {
         const details = document.createElement('div')
         details.style.marginTop = '0.5em'
 
@@ -276,7 +223,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {FtypAtom} atom
      * @param {HTMLElement} atomDiv
      */
-    #renderFtypAtomDetails(atom, atomDiv) {
+    renderFtypAtomDetails(atom, atomDiv) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -302,7 +249,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {MetadataHandlerAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderMetadataHandlerAtomDetails(atom, atomElem) {
+    renderMetadataHandlerAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -332,7 +279,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {VmhdAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderVmhdAtomDetails(atom, atomElem) {
+    renderVmhdAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -378,7 +325,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {HandlerReferenceAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderHandlerReferenceAtomDetails(atom, atomElem) {
+    renderHandlerReferenceAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -424,7 +371,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {TrunAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderTrunAtomDetails(atom, atomElem) {
+    renderTrunAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -517,7 +464,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {ElstAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderElstAtomDetails(atom, atomElem) {
+    renderElstAtomDetails(atom, atomElem) {
         const edts = atom.parent
         /** @type {TrakAtom} */
         const trak = edts.parent
@@ -567,7 +514,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {TfhdAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderTfhdAtomDetails(atom, atomElem) {
+    renderTfhdAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -654,7 +601,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {TkhdAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderTkhdAtomDetails(atom, atomElem) {
+    renderTkhdAtomDetails(atom, atomElem) {
         /** @type {TrakAtom} */
         const trak = atom.parent
         /** @type {MoovAtom} */
@@ -726,7 +673,7 @@ export default class QuickTimeRenderer extends Renderer {
             </tr>
             <tr>
                 <th scope="row">Matrix</th>
-                <td>${this.#renderMatrix(atom.matrix)}</td>
+                <td>${this.renderMatrix(atom.matrix)}</td>
             </tr>
             <tr>
                 <th scope="row">Width</th>
@@ -745,7 +692,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {MdhdAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderMdhdAtomDetails(atom, atomElem) {
+    renderMdhdAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -797,7 +744,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {TrexAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderTrexAtomDetails(atom, atomElem) {
+    renderTrexAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -839,7 +786,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {TfdtAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderTfdtAtomDetails(atom, atomElem) {
+    renderTfdtAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -865,7 +812,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {MfhdAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderMfhdAtomDetails(atom, atomElem) {
+    renderMfhdAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -891,7 +838,7 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {MvhdAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    #renderMvhdAtomDetails(atom, atomElem) {
+    renderMvhdAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -930,7 +877,7 @@ export default class QuickTimeRenderer extends Renderer {
             </tr>
             <tr>
                 <th scope="row">Matrix structure</th>
-                <td>${this.#renderMatrix(atom.matrixStructure)}</td>
+                <td>${this.renderMatrix(atom.matrixStructure)}</td>
             </tr>
             <tr>
                 <th scope="row">Preview time</th>
@@ -968,7 +915,7 @@ export default class QuickTimeRenderer extends Renderer {
     /**
      * @param {Matrix} matrix
      */
-    #renderMatrix(matrix) {
+    renderMatrix(matrix) {
         return `<math>
             <mrow>
                 <mo>[</mo>

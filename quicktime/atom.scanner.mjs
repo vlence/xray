@@ -74,6 +74,8 @@ export default class AtomScanner {
         const ascii = textDecoders.get('ascii')
 
         while (!reader.done()) {
+            const bytesReadBefore = reader.bytesRead()
+
             let atom = new Atom()
             atom.size = await reader.readUint32()
 
@@ -98,6 +100,15 @@ export default class AtomScanner {
             else {
                 log.info(`${atom.type} [${atom.typeBytes}]: no parser found; skipping ${atom.getDataSize()} bytes`)
                 atom.data = await reader.readBlob(atom.getDataSize())
+            }
+            const bytesReadAfter = reader.bytesRead()
+            const bytesRead = bytesReadAfter - bytesReadBefore
+
+            if (bytesRead < atom.getSize()) {
+                log.warn(atom.type, bytesRead + '/' + atom.getSize(), 'bytes read')
+            }
+            else if (bytesRead > atom.getSize()) {
+                throw new Error(`${atom.type} ${bytesRead}/${atom.getSize()} bytes read`)
             }
 
             yield atom

@@ -79,9 +79,6 @@ export async function moovAtomParser(reader, atomTemplate, scanner) {
         else if (nextAtom instanceof UdtaAtom) {
             atom.userData = nextAtom
         }
-        else {
-            log.warn('moov: unexpected atom ' + nextAtom.type)
-        }
 
         if (bytesRemaining == 0) {
             break

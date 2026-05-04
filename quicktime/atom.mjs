@@ -103,3 +103,22 @@ export default class Atom {
         return this.size
     }
 }
+
+export class FullAtom extends Atom {
+    /**
+     * The version and flags fields read as a single
+     * unsigned 32-bit integer. Use `version()` and
+     * `flags()` methods to get the version and flags.
+     *
+     * @type {number}
+     */
+    versionAndFlags
+
+    version() {
+        return (this.versionAndFlags & 0xFF000000) >> 3
+    }
+
+    flags() {
+        return this.versionAndFlags & 0x00FFFFFF
+    }
+}

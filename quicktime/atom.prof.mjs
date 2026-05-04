@@ -1,4 +1,4 @@
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
@@ -6,15 +6,7 @@ import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/track_production_aperture_dimensions_atom}
  */
-export default class ProfAtom extends Atom {
-    /**
-     * @type {number}
-     */
-    version
-
-    /**
-     */
-    flags = new Uint8Array(3)
+export default class ProfAtom extends FullAtom {
 
     /**
      * @type {number}
@@ -41,8 +33,7 @@ export async function profAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readUint8()
-    await reader.read(atom.flags) // TODO
+    atom.versionAndFlags = await reader.readUint32()
     atom.width = await reader.readFixed32()
     atom.height = await reader.readFixed32()
 

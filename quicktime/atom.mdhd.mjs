@@ -1,4 +1,4 @@
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
@@ -8,15 +8,7 @@ import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/media_header_atom}
  */
-export default class MdhdAtom extends Atom {
-    /**
-     * @type {number}
-     */
-    version
-
-    /**
-     */
-    flags = new Uint8Array(3)
+export default class MdhdAtom extends FullAtom {
 
     /**
      * @type {Date}
@@ -63,8 +55,7 @@ export async function mdhdAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readUint8()
-    await reader.read(atom.flags)
+    atom.versionAndFlags = await reader.readUint32()
     atom.creationTime = await reader.readMacintoshDate()
     atom.modificationTime = await reader.readMacintoshDate()
     atom.timeScale = await reader.readInt32()

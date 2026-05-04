@@ -1,4 +1,4 @@
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
@@ -11,13 +11,7 @@ import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/edit_list_atom}
  */
-export default class ElstAtom extends Atom {
-    /**
-     * @type {number}
-     */
-    version
-
-    flags = new Uint8Array(3)
+export default class ElstAtom extends FullAtom {
 
     /** @type {EditListTableEntry[]} */
     entries = []
@@ -67,8 +61,7 @@ export async function elstAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readUint8()
-    await reader.read(atom.flags)
+    atom.versionAndFlags = await reader.readUint32()
 
     const entries = await reader.readUint32()
 

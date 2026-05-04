@@ -1,5 +1,5 @@
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import Matrix from './matrix.mjs'
 import MacintoshDate from './date.mjs'
 
@@ -10,19 +10,7 @@ const log = console
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/movie_header_atom}
  */
-export default class MvhdAtom extends Atom {
-    /**
-     * The version of this atom.
-     *
-     * @type {number}
-     */
-    version
-
-    /**
-     * Unused. Reserved for future use.
-     *
-     * @type {Uint8Array<ArrayBuffer>} */
-    flags = new Uint8Array(3)
+export default class MvhdAtom extends FullAtom {
 
     /**
      * When this movie was created
@@ -153,8 +141,7 @@ export async function mvhdAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readUint8()
-    await reader.read(atom.flags)
+    atom.versionAndFlags = await reader.readUint32()
     atom.creationTime = await reader.readMacintoshDate()
     atom.modificationTime = await reader.readMacintoshDate()
     atom.timeScale = await reader.readUint32()

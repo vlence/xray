@@ -1,4 +1,4 @@
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import StsdAtom from './atom.stsd.mjs'
 
@@ -10,9 +10,7 @@ const log = console
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/compressed_matte_atom}
  */
-export default class KmatAtom extends Atom {
-    version
-    flags = new Uint8Array(8)
+export default class KmatAtom extends FullAtom {
 
     /**
      * An image description structure associated with this matte data.
@@ -44,10 +42,9 @@ export async function kmatAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readUint8()
-    await reader.read(atom.flags)
+    atom.versionAndFlags = await reader.readUint32()
 
-    let bytesRemaining = atom.getDataSize() - 1 - 3
+    let bytesRemaining = atom.getDataSize() - 4
 
     const iter = scanner[Symbol.asyncIterator]()
     const nextAtom = await iter.next().then(result => result.value)

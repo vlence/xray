@@ -228,11 +228,11 @@ export default class QuickTimeRenderer extends Renderer {
         details.innerHTML = `<table>
             <tr>
                 <th scope="row">Version</th>
-                <td>${atom.version}</td>
+                <td>${atom.version()}</td>
             </tr>
             <tr>
                 <th scope="row">Flags</th>
-                <td>0x${atom.flags.map(flag => flag.toString(16).padStart(2, '0')).join('')}</td>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
             </tr>
         </table>`
 
@@ -268,11 +268,11 @@ export default class QuickTimeRenderer extends Renderer {
         details.innerHTML = `<table>
             <tr>
                 <th scope="row">Version</th>
-                <td>${atom.version}</td>
+                <td>${atom.version()}</td>
             </tr>
             <tr>
                 <th scope="row">Flags</th>
-                <td>0x${atom.flags.map(flag => flag.toString(16).padStart(2, '0')).join('')}</td>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
             </tr>
             <tr>
                 <th scope="row">Creation time</th>
@@ -330,11 +330,11 @@ export default class QuickTimeRenderer extends Renderer {
         details.innerHTML = `
             <tr>
                 <th scope="row">Version</th>
-                <td>${atom.version}</td>
+                <td>${atom.version()}</td>
             </tr>
             <tr>
                 <th scope="row">Flags</th>
-                <td>${atom.flags}</td>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
             </tr>
             <tr>
                 <th scope="row">Creation time</th>

@@ -1,4 +1,4 @@
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import * as textDecoders from '../utils/textdecoder.mjs'
 
@@ -27,13 +27,7 @@ import * as textDecoders from '../utils/textdecoder.mjs'
  *
  * @see {@link https://datatracker.ietf.org/doc/html/rfc4646}
  */
-export default class ElngAtom extends Atom {
-    /**
-     * @type {number}
-     */
-    version
-
-    flags = new Uint8Array(3)
+export default class ElngAtom extends FullAtom {
 
     /**
      * A RFC 4646 (BCP 47) language tag.
@@ -62,8 +56,7 @@ export async function elngAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readUint8()
-    await reader.read(atom.flags)
+    atom.versionAndFlags = await reader.readUint32()
 
     atom.languageTagBytes = new Uint8Array(atom.getDataSize() - 1 - 3)
     await reader.read(atom.languageTagBytes)

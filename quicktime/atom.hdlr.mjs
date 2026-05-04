@@ -1,4 +1,4 @@
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
@@ -12,13 +12,7 @@ import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/handler_reference_atom}
  */
-export default class HdlrAtom extends Atom {
-    /**
-     * @type {number}
-     */
-    version
-
-    flags = new Uint8Array(3)
+export default class HdlrAtom extends FullAtom {
 
     /**
      * A four-character code that identifies the type of the handler.
@@ -68,11 +62,8 @@ export async function hdlrAtomParser(reader, atomTemplate, scanner) {
 
     let bytesRemaining = atom.getDataSize()
 
-    atom.version = await reader.readUint8()
-    bytesRemaining -= 1
-
-    await reader.read(atom.flags)
-    bytesRemaining -= 3
+    atom.versionAndFlags = await reader.readUint32()
+    bytesRemaining -= 4
 
     atom.componentType = await reader.readUtf8String(4)
     bytesRemaining -= 4

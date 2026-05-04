@@ -1,16 +1,10 @@
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/media_data_reference_atom}
  */
-export default class DrefAtom extends Atom {
-    /**
-     * @type {number}
-     */
-    version
-
-    flags = new Uint8Array(3)
+export default class DrefAtom extends FullAtom {
 }
 
 /**
@@ -28,8 +22,7 @@ export async function drefAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readUint8()
-    await reader.read(atom.flags)
+    atom.versionAndFlags = await reader.readUint32()
 
     const iter = scanner[Symbol.asyncIterator]()
     const entries = await reader.readInt32()

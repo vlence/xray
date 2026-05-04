@@ -1,4 +1,4 @@
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import Color from './color.mjs'
 
@@ -6,13 +6,7 @@ import Color from './color.mjs'
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/video_media_information_header_atom}
  */
-export default class VmhdAtom extends Atom {
-    /**
-     * @type {number}
-     */
-    version
-
-    flags = new Uint8Array(3)
+export default class VmhdAtom extends FullAtom {
 
     /**
      * Specifies the transfer mode.
@@ -45,8 +39,7 @@ export async function vmhdAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readUint8()
-    await reader.read(atom.flags)
+    atom.versionAndFlags = await reader.readUint32()
     atom.graphicsMode = await reader.readInt16()
     atom.opcolor = await reader.readColor()
 

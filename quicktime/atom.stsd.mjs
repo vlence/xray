@@ -1,4 +1,4 @@
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import * as textDecoders from '../utils/textdecoder.mjs'
 
@@ -12,11 +12,7 @@ import * as textDecoders from '../utils/textdecoder.mjs'
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/sample_description_atom}
  */
-export default class StsdAtom extends Atom {
-    /** @type {number} */
-    version
-
-    flags = new Uint8Array(8)
+export default class StsdAtom extends FullAtom {
 
     /** @type {SampleDescription[]} */
     table = []
@@ -49,8 +45,7 @@ export async function stsdAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readUint8()
-    await reader.read(atom.flags)
+    atom.versionAndFlags = await reader.readUint32()
 
     const entries = await reader.readUint32()
     const ascii = textDecoders.get('ascii')

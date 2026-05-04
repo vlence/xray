@@ -1,5 +1,5 @@
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import Matrix from './matrix.mjs'
 
 const log = console
@@ -9,16 +9,7 @@ const log = console
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/track_header_atom}
  */
-export default class TkhdAtom extends Atom {
-    /**
-     * @type {number}
-     */
-    version
-
-    /**
-     * @type {number}
-     */
-    flags = new Uint8Array(3)
+export default class TkhdAtom extends FullAtom {
 
     /**
      *  @type {Date}
@@ -104,8 +95,7 @@ export async function tkhdAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
 
-    atom.version = await reader.readUint8()
-    await reader.skip(3) // TODO: flags
+    atom.versionAndFlags = await reader.readUint32()
     atom.creationTime = await reader.readMacintoshDate()
     atom.modificationTime = await reader.readMacintoshDate()
     atom.id = await reader.readUint32()

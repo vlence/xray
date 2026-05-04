@@ -11,8 +11,11 @@ import Matrix from '../../quicktime/matrix.mjs'
 import ElstAtom from '../../quicktime/atom.elst.mjs'
 import BinaryRenderer from '../application/octet-stream.mjs'
 import MdhdAtom from '../../quicktime/atom.mdhd.mjs'
-import * as QuickTimeLanguage from '../../quicktime/language.mjs'
 import { HandlerReferenceAtom, MetadataHandlerAtom } from '../../quicktime/atom.hdlr.mjs'
+import VmhdAtom from '../../quicktime/atom.vmhd.mjs'
+
+import * as QuickTimeLanguage from '../../quicktime/language.mjs'
+import * as QuickTimeGraphicsMode from '../../quicktime/graphicsmode.mjs'
 
 const log = console
 
@@ -173,6 +176,10 @@ export default class QuickTimeRenderer extends Renderer {
                 this.#renderElstAtomDetails(atom, atomDiv)
                 break
 
+            case 'vmhd':
+                this.#renderVmhdAtomDetails(atom, atomDiv)
+                break
+
             case 'hdlr':
                 if (atom instanceof HandlerReferenceAtom) {
                     this.#renderHandlerReferenceAtomDetails(atom, atomDiv)
@@ -243,6 +250,52 @@ export default class QuickTimeRenderer extends Renderer {
             <tr>
                 <th scope="row">Handler type</th>
                 <td>${atom.handlerType}</td>
+            </tr>
+        </table>`
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {VmhdAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderVmhdAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>
+                    <label>
+                        <input type="checkbox" ${atom.noLeanAhead() ? 'checked' : ''} disabled>
+                        No lean ahead
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Graphics mode</th>
+                <td>
+                    ${QuickTimeGraphicsMode.modeString(atom.graphicsMode)}
+                    [0x${atom.graphicsMode.toString(16).padStart(4, '0')}]
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Opcolor</th>
+                <td>
+                    <label>
+                        <input type="color" value="#${atom.opcolor.hex()}" disabled>
+                        R: ${atom.opcolor.red}
+                        G: ${atom.opcolor.green}
+                        B: ${atom.opcolor.blue}
+                        [0x${atom.opcolor.hex()}]
+                    </label>
+                </td>
             </tr>
         </table>`
 

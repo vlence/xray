@@ -85,3 +85,21 @@ export function usesOpcolor(mode) {
 export function is(expected, actual) {
     return expected === actual
 }
+
+/**
+ * @param {number} mode
+ */
+export function modeString(mode) {
+    switch (mode) {
+        case COPY: return 'Copy'
+        case DITHER_COPY: return 'Dither copy'
+        case BLEND: return 'Blend'
+        case TRANSPARENT: return 'Transparent'
+        case STRAIGHT_ALPHA: return 'Straight alpha'
+        case PREMUL_WHITE_ALPHA: return 'Premul white alpha'
+        case PREMUL_BLACK_ALPHA: return 'Premul black alpha'
+        case STRAIGHT_ALPHA_BLEND: return 'Straight alpha blend'
+        case COMPOSITION: return 'Composition (dither copy)'
+        default: return `Unknown mode 0x${mode.toString(16).padStart(4, '0')}`
+    }
+}

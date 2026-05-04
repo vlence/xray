@@ -23,6 +23,17 @@ export default class VmhdAtom extends FullAtom {
      * @type {Color}
      */
     opcolor
+
+    /**
+     * This is a compatibility flag that allows QuickTime to distinguish
+     * between movies created with QuickTime 1.0 and newer movies
+     *
+     * Always set to 1 unless you are creating a movie intended for
+     * playback using version 1.0 of QuickTime.
+     */
+    noLeanAhead() {
+        return (this.flags() & 1) != 0
+    }
 }
 
 /**

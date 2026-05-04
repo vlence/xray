@@ -41,6 +41,8 @@ import { tfhdAtomParser } from './atom.tfhd.mjs'
 import { mfhdAtomParser } from './atom.mfhd.mjs'
 import { tfdtAtomParser } from './atom.tfdt.mjs'
 import { trunAtomParser } from './atom.trun.mjs'
+import { ilstAtomParser } from './atom.ilst.mjs'
+import { dataAtomParser } from './atom.data.mjs'
 
 const log = console
 
@@ -99,5 +101,7 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('mfhd', mfhdAtomParser)
         this.defineParser('tfdt', tfdtAtomParser)
         this.defineParser('trun', trunAtomParser)
+        this.defineParser('ilst', ilstAtomParser)
+        this.defineParser('data', dataAtomParser)
     }
 }

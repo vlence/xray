@@ -1,6 +1,8 @@
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
+const log = console
+
 /**
  * User data atoms allow you to define and store data associated with a
  * QuickTime object, such as a movie 'moov', track 'trak', or media
@@ -43,28 +45,23 @@ export async function udtaAtomParser(reader, atomTemplate, scanner) {
     atom.parent = atomTemplate.parent
 
     let bytesRemaining = atom.getDataSize()
+    const iter = scanner.withParent(atom)[Symbol.asyncIterator]()
 
-    if (bytesRemaining == 0) {
-        return atom
-    }
+    while (bytesRemaining > 0) {
+        if (bytesRemaining == 4) {
+            // probably end of list. read and exit
+            const i = await reader.readUint32()
 
-    if (bytesRemaining == 4) {
-        await reader.readUint32()
-        return atom
-    }
+            if (i != 0) {
+                log.warn(`udta: user data list terminated with ${i} instead of 0`)
+            }
 
-    for await (const nextAtom of scanner.withParent(atom)) {
+            break
+        }
+
+        const nextAtom = await iter.next().then(result => result.value)
         atom.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
-
-        if (bytesRemaining == 0) {
-            break
-        }
-
-        if (bytesRemaining == 4) {
-            await reader.readUint32()
-            break
-        }
     }
 
     return atom

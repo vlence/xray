@@ -121,4 +121,8 @@ export class FullAtom extends Atom {
     flags() {
         return this.versionAndFlags & 0x00FFFFFF
     }
+
+    getDataSize() {
+        return super.getDataSize() - 4
+    }
 }

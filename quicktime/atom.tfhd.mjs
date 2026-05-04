@@ -83,10 +83,9 @@ export async function tfhdAtomParser(reader, atomTemplate, scanner) {
     atom.extendedSize = atomTemplate.extendedSize
     atom.parent = atomTemplate.parent
 
-    let bytesRemaining = atom.getDataSize()
-
     atom.versionAndFlags = await reader.readUint32()
-    bytesRemaining -= 4
+
+    let bytesRemaining = atom.getDataSize()
 
     atom.id = await reader.readUint32()
     bytesRemaining -= 4

@@ -71,15 +71,11 @@ export class MetadataHandlerAtom extends FullAtom {
  * @param {AtomScanner} scanner
  */
 export async function hdlrAtomParser(reader, atomTemplate, scanner) {
-    if (atomTemplate.parent instanceof MdiaAtom) {
-        return handlerReferenceAtomParser(reader, atomTemplate, scanner)
-    }
-    else if (atomTemplate.parent instanceof MetaAtom) {
+    if (atomTemplate.parent instanceof MetaAtom) {
         return metadataHandlerAtomParser(reader, atomTemplate, scanner)
     }
     else {
-        log.warn('hdlr: unexpected parent atom ' + atomTemplate.parent?.type)
-        return atomTemplate
+        return handlerReferenceAtomParser(reader, atomTemplate, scanner)
     }
 }
 
@@ -98,10 +94,9 @@ export async function handlerReferenceAtomParser(reader, atomTemplate, scanner) 
     atom.extendedSize = atomTemplate.extendedSize
     atom.parent = atomTemplate.parent
 
-    let bytesRemaining = atom.getDataSize()
-
     atom.versionAndFlags = await reader.readUint32()
-    bytesRemaining -= 4
+
+    let bytesRemaining = atom.getDataSize()
 
     atom.componentType = await reader.readUtf8String(4)
     bytesRemaining -= 4
@@ -148,7 +143,7 @@ export async function metadataHandlerAtomParser(reader, atomTemplate, scanner) {
     atom.handlerType = await reader.readUtf8String(4)
     await reader.skip(4 * 3) // reserved
     
-    const bytesRemaining = atom.getDataSize() - 4 - 4 - (4 * 3)
+    const bytesRemaining = atom.getDataSize() - 4 - (4 * 3)
     atom.name = await reader.readUtf8String(bytesRemaining)
 
     return atom

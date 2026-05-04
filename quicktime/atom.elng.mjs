@@ -59,7 +59,7 @@ export async function elngAtomParser(reader, atomTemplate, scanner) {
 
     atom.versionAndFlags = await reader.readUint32()
 
-    atom.languageTagBytes = new Uint8Array(atom.getDataSize() - 1 - 3)
+    atom.languageTagBytes = new Uint8Array(atom.getDataSize())
     await reader.read(atom.languageTagBytes)
 
     const ascii = textDecoders.get('ascii')

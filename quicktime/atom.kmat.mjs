@@ -45,7 +45,7 @@ export async function kmatAtomParser(reader, atomTemplate, scanner) {
 
     atom.versionAndFlags = await reader.readUint32()
 
-    let bytesRemaining = atom.getDataSize() - 4
+    let bytesRemaining = atom.getDataSize()
 
     const iter = scanner.withParent(atom)[Symbol.asyncIterator]()
     const nextAtom = await iter.next().then(result => result.value)

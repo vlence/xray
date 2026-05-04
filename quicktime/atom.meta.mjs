@@ -4,15 +4,9 @@ import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 /**
  * Container for metadata.
  *
- * @see {@link https://developer.apple.com/documentation/quicktime-file-format/metadata_atom}
+ * @see {@link https://developer.apple.com/documentation/quicktime-file-format/metadata_atoms_and_types}
  */
 export default class MetaAtom extends FullAtom {
-    /**
-     * @type {number}
-     */
-    version
-
-    flags = new Uint8Array(3)
 }
 
 /**
@@ -32,7 +26,7 @@ export async function metaAtomParser(reader, atomTemplate, scanner) {
 
     atom.versionAndFlags = await reader.readUint32()
 
-    let bytesRemaining = atom.getDataSize() - 4
+    let bytesRemaining = atom.getDataSize()
 
     const iter = scanner.withParent(atom)[Symbol.asyncIterator]()
 

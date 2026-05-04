@@ -31,7 +31,7 @@ export default class MdhdAtom extends FullAtom {
     duration
 
     /**
-     * @type {}
+     * @type {number}
      */
     language
 

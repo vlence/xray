@@ -16,6 +16,10 @@ import VmhdAtom from '../../quicktime/atom.vmhd.mjs'
 
 import * as QuickTimeLanguage from '../../quicktime/language.mjs'
 import * as QuickTimeGraphicsMode from '../../quicktime/graphicsmode.mjs'
+import TfhdAtom from '../../quicktime/atom.tfhd.mjs'
+import MfhdAtom from '../../quicktime/atom.mfhd.mjs'
+import TfdtAtom from '../../quicktime/atom.tfdt.mjs'
+import TrunAtom from '../../quicktime/atom.trun.mjs'
 
 const log = console
 
@@ -172,8 +176,24 @@ export default class QuickTimeRenderer extends Renderer {
                 this.#renderTkhdAtomDetails(atom, atomDiv)
                 break
 
+            case 'tfhd':
+                this.#renderTfhdAtomDetails(atom, atomDiv)
+                break
+
+            case 'mfhd':
+                this.#renderMfhdAtomDetails(atom, atomDiv)
+                break
+
+            case 'tfdt':
+                this.#renderTfdtAtomDetails(atom, atomDiv)
+                break
+
             case 'elst':
                 this.#renderElstAtomDetails(atom, atomDiv)
+                break
+
+            case 'trun':
+                this.#renderTrunAtomDetails(atom, atomDiv)
                 break
 
             case 'vmhd':
@@ -349,6 +369,99 @@ export default class QuickTimeRenderer extends Renderer {
     }
 
     /**
+     * @param {TrunAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderTrunAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        const samplesTable = document.createElement('table')
+        samplesTable.innerHTML = `<tr>
+            <th></th>
+            <th scope="col">Duration</th>
+            <th scope="col">Size</th>
+            <th scope="col">Flags</th>
+            <th scope="col">Composition time offset</th>
+        </tr>`
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>
+                    <label>
+                        <input type="checkbox" disabled ${atom.dataOffsetPresent() ? 'checked' : ''}>
+                        Data offset present
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.firstSampleFlagsPresent() ? 'checked' : ''}>
+                        First sample flags present
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.sampleDurationPresent() ? 'checked' : ''}>
+                        Sample duration present
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.sampleSizePresent() ? 'checked' : ''}>
+                        Sample size present
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.sampleFlagsPresent() ? 'checked' : ''}>
+                        Sample flags present
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.sampleCompositionTimeOffsetsPresent() ? 'checked' : ''}>
+                        Sample composition time offsets present
+                    </label>
+                    <br>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Data offset</th>
+                <td>${atom.dataOffsetPresent() ? '0x'+atom.dataOffset.toString(16).padStart(8, '0') : 'Undefined'}</td>
+            </tr>
+            <tr>
+                <th scope="row">First sample flags</th>
+                <td>${atom.firstSampleFlagsPresent() ? '0x'+atom.firstSampleFlags.toString(16).padStart(8, '0') : 'Undefined'}</td>
+            </tr>
+            <tr>
+                <th scope="row">Samples</th>
+                <td>${atom.samples.length}</td>
+            </tr>
+        </table>`
+
+        for (let i = 0; i < atom.samples.length; i++) {
+            const sample = atom.samples[i]
+            const row = document.createElement('tr')
+            row.innerHTML = `
+                <th scope="col">${i+1}</th>
+                <th scope="col">${atom.sampleDurationPresent() ? sample.duration : 'Undefined'}</th>
+                <th scope="col">${atom.sampleSizePresent() ? sample.size + ' bytes' : 'Undefined'}</th>
+                <th scope="col">${atom.sampleFlagsPresent() ? '0x'+sample.flags.toString(16).padStart(8, '0') : 'Undefined'}</th>
+                <th scope="col">${atom.sampleCompositionTimeOffsetsPresent() ? sample.compositionTimeOffset : 'Undefined'}</th>
+            `
+            samplesTable.appendChild(row)
+        }
+
+        atomElem.appendChild(details)
+        atomElem.appendChild(samplesTable)
+    }
+
+    /**
      * @param {ElstAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
@@ -396,6 +509,93 @@ export default class QuickTimeRenderer extends Renderer {
 
         atomElem.appendChild(details)
         atomElem.appendChild(entriesTable)
+    }
+
+    /**
+     * @param {TfhdAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderTfhdAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>
+                    <label>
+                        <input type="checkbox" disabled ${atom.baseDataOffsetPresent() ? 'checked' : ''}>
+                        Base data offset present
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.sampleDescriptionIndexPresent() ? 'checked' : ''}>
+                        Sample description index present
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.defaultSampleDurationPresent() ? 'checked' : ''}>
+                        Default sample duration present
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.defaultSampleSizePresent() ? 'checked' : ''}>
+                        Default sample size present
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.defaultSampleFlagsPresent() ? 'checked' : ''}>
+                        Default sample flags present
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.durationIsEmpty() ? 'checked' : ''}>
+                        Duration is empty
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.defaultBaseIsMoof() ? 'checked' : ''}>
+                        Default base is moof
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Track ID</th>
+                <td>${atom.id}</td>
+            </tr>
+            <tr>
+                <th scope="row">Base data offset</th>
+                <td>${atom.baseDataOffsetPresent() ? '0x'+atom.baseDataOffset.toString(16).padStart(16, '0') : 'Undefined'}</td>
+            </tr>
+            <tr>
+                <th scope="row">Sample description index</th>
+                <td>${atom.sampleDescriptionIndexPresent() ? atom.sampleDescriptionIndexPresent : 'Undefined'}</td>
+            </tr>
+            <tr>
+                <th scope="row">Default sample duration</th>
+                <td>${atom.defaultSampleDurationPresent() ? atom.defaultSampleDuration : 'Undefined'}</td>
+            </tr>
+            <tr>
+                <th scope="row">Default sample size</th>
+                <td>${atom.defaultSampleSizePresent() ? atom.defaultSampleSize + ' bytes' : 'Undefined'}</td>
+            </tr>
+            <tr>
+                <th scope="row">Default sample flags</th>
+                <td>${atom.defaultSampleFlagsPresent() ? '0x'+atom.defaultSampleFlags.toString(16).padStart(8, '0') : 'Undefined'}</td>
+            </tr>
+        </table>`
+
+        atomElem.appendChild(details)
     }
 
     /**
@@ -535,6 +735,58 @@ export default class QuickTimeRenderer extends Renderer {
             <tr>
                 <th scope="row">Quality</th>
                 <td>${atom.quality}</td>
+            </tr>
+        `
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {TfdtAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderTfdtAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Base media decode time</th>
+                <td>${atom.baseMediaDecodeTime}</td>
+            </tr>
+        `
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {MfhdAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    #renderMfhdAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Sequence number</th>
+                <td>${atom.sequenceNumber}</td>
             </tr>
         `
 

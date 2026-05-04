@@ -115,7 +115,7 @@ export class FullAtom extends Atom {
     versionAndFlags
 
     version() {
-        return (this.versionAndFlags & 0xFF000000) >> 3
+        return (this.versionAndFlags & 0xFF000000) >> 24
     }
 
     flags() {

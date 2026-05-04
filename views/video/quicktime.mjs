@@ -272,7 +272,31 @@ export default class QuickTimeRenderer extends Renderer {
             </tr>
             <tr>
                 <th scope="row">Flags</th>
-                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+                <td>
+                    <label>
+                        <input type="checkbox" disabled ${atom.trackEnabled() ? 'checked' : ''}>
+                        Track enabled
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.trackInMovie() ? 'checked' : ''}>
+                        Track in movie
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.trackInPreview() ? 'checked' : ''}>
+                        Track in preview
+                    </label>
+                    <br>
+
+                    <label>
+                        <input type="checkbox" disabled ${atom.trackInPoster() ? 'checked' : ''}>
+                        Track in poster
+                    </label>
+                    <br>
+                </td>
             </tr>
             <tr>
                 <th scope="row">Creation time</th>

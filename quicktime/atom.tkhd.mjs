@@ -78,6 +78,22 @@ export default class TkhdAtom extends FullAtom {
      * @type {number}
      */
     height
+
+    trackEnabled() {
+        return (this.flags() & 0x0001) != 0
+    }
+
+    trackInMovie() {
+        return (this.flags() & 0x0002) != 0
+    }
+
+    trackInPreview() {
+        return (this.flags() & 0x0004) != 0
+    }
+
+    trackInPoster() {
+        return (this.flags() & 0x0008) != 0
+    }
 }
 
 /**

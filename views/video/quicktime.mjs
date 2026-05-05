@@ -465,12 +465,10 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {HTMLDetailsElement} atomElem
      */
     renderElstAtomDetails(atom, atomElem) {
-        const edts = atom.parent
-        /** @type {TrakAtom} */
-        const trak = edts.parent
         /** @type {MoovAtom} */
-        const moov = trak.parent
-        const mvhd = moov.header
+        const moov = atom.findParentByType('moov')
+        /** @type {MvhdAtom} */
+        const mvhd = moov.findByType('mvhd')
 
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
@@ -602,11 +600,10 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {HTMLDetailsElement} atomElem
      */
     renderTkhdAtomDetails(atom, atomElem) {
-        /** @type {TrakAtom} */
-        const trak = atom.parent
         /** @type {MoovAtom} */
-        const moov = trak.parent
-        const mvhd = moov.header
+        const moov = atom.findParentByType('moov')
+        /** @type {MvhdAtom} */
+        const mvhd = moov.findByType('mvhd')
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 

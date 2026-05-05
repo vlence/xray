@@ -102,6 +102,65 @@ export default class Atom {
 
         return this.size
     }
+
+    /**
+     * Find and return a child `type` if present.
+     *
+     * @param {string} type
+     *
+     * @returns {Atom?}
+     */
+    findByType(type) {
+        for (const child of this.children) {
+            if (child.type === type) {
+                return child
+            }
+
+            const found = child.findByType(type)
+
+            if (found) {
+                return found
+            }
+        }
+    }
+
+    /**
+     * Find and return all children `type` if present.
+     *
+     * @param {string} type
+     *
+     * @returns {Atom[]}
+     */
+    findAllByType(type, all = []) {
+        for (const child of this.children) {
+            if (child.type === type) {
+                all.push(child)
+            }
+
+            child.findAllByType(type, all)
+        }
+
+        return all
+    }
+
+    /**
+     * Find and return parent `type` if present.
+     *
+     * @param {string} type
+     *
+     * @returns {Atom?}
+     */
+    findParentByType(type) {
+        if (!this.parent) {
+            return
+        }
+
+        if (this.parent.type === type) {
+            return this.parent
+        }
+
+        return this.parent.findParentByType(type)
+    }
 }
 
 export class FullAtom extends Atom {

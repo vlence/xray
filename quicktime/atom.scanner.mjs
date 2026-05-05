@@ -106,6 +106,8 @@ export default class AtomScanner {
 
             if (bytesRead < atom.getSize()) {
                 log.warn(atom.type, bytesRead + '/' + atom.getSize(), 'bytes read')
+                log.warn(atom.type, 'skipping', atom.getSize() - bytesRead, 'bytes')
+                await reader.skip(atom.getSize() - bytesRead)
             }
             else if (bytesRead > atom.getSize()) {
                 throw new Error(`${atom.type} ${bytesRead}/${atom.getSize()} bytes read`)

@@ -17,24 +17,24 @@ export default class MetaBox extends FullAtom {
  * @param {AtomScanner} scanner
  */
 export async function metaBoxParser(reader, atomTemplate, scanner) {
-    const atom = new MetaBox()
-    atom.size = atomTemplate.size
-    atom.type = atomTemplate.type
-    atom.typeBytes = atomTemplate.typeBytes
-    atom.extendedSize = atomTemplate.extendedSize
-    atom.parent = atomTemplate.parent
+    const box = new MetaBox()
+    box.size = atomTemplate.size
+    box.type = atomTemplate.type
+    box.typeBytes = atomTemplate.typeBytes
+    box.extendedSize = atomTemplate.extendedSize
+    box.parent = atomTemplate.parent
 
-    atom.versionAndFlags = await reader.readUint32()
+    box.versionAndFlags = await reader.readUint32()
 
-    let bytesRemaining = atom.getDataSize()
+    let bytesRemaining = box.getDataSize()
 
-    const iter = scanner.withParent(atom)[Symbol.asyncIterator]()
+    const iter = scanner.withParent(box)[Symbol.asyncIterator]()
 
     while (bytesRemaining > 0) {
         const nextAtom = await iter.next().then(result => result.value)
-        atom.children.push(nextAtom)
+        box.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
     }
 
-    return atom
+    return box
 }

@@ -1,9 +1,9 @@
 import { brandString, ftypAtomParser } from "../quicktime/atom.ftyp.mjs";
 
 export async function ftypBoxParser(reader, atomTemplate, scanner) {
-    const atom = await ftypAtomParser(reader, atomTemplate, scanner)
+    const box = await ftypAtomParser(reader, atomTemplate, scanner)
 
-    atom.getMinorVersionString = () => brandString(atom.minorVersion)
+    box.getMinorVersionString = () => brandString(box.minorVersion)
 
-    return atom
+    return box
 }

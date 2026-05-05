@@ -6,7 +6,7 @@ const MacintoshDate = {
      * Macintosh date. A Macintosh date is a 32-bit value
      * indicating the number of seconds since 1 Jan 1904.
      *
-     * @param {number} d
+     * @param {number} d 32-bit number representing seconds
      *
      * @returns {Date}
      *
@@ -14,7 +14,7 @@ const MacintoshDate = {
      */
     from(d) {
         return new Date(ms1904 + (d * 1000))
-    }
+    },
 }
 
 export default MacintoshDate

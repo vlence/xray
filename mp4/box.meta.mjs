@@ -6,7 +6,7 @@ import AtomScanner, { AtomByteReader } from '../quicktime/atom.scanner.mjs'
  *
  * @see {@link https://mpeggroup.github.io/FileFormatConformance/?query=%3D%22meta%22}
  */
-export default class MetaAtom extends FullAtom {
+export default class MetaBox extends FullAtom {
 }
 
 /**
@@ -16,8 +16,8 @@ export default class MetaAtom extends FullAtom {
  * @param {Atom} atomTemplate
  * @param {AtomScanner} scanner
  */
-export async function metaAtomParser(reader, atomTemplate, scanner) {
-    const atom = new MetaAtom()
+export async function metaBoxParser(reader, atomTemplate, scanner) {
+    const atom = new MetaBox()
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes

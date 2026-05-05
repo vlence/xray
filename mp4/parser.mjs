@@ -1,5 +1,6 @@
 import QuickTimeParser from "../quicktime/parser.mjs"
-import { metaAtomParser } from "./atom.meta.mjs"
+import { metaBoxParser } from "./box.meta.mjs"
+import { mvhdBoxParser } from "./box.mvhd.mjs"
 
 const log = console
 
@@ -13,6 +14,7 @@ export default class MP4Parser extends QuickTimeParser {
     constructor() {
         super()
 
-        this.defineParser('meta', metaAtomParser)
+        this.defineParser('meta', metaBoxParser)
+        this.defineParser('mvhd', mvhdBoxParser)
     }
 }

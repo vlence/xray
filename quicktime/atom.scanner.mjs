@@ -187,9 +187,18 @@ export class AtomByteReader extends ByteReader {
         return new Blob(bufs)
     }
 
-    async readMacintoshDate() {
-        const d = await this.readUint32()
-        return MacintoshDate.from(d)
+    async readMacintoshDate(size = 4) {
+        if (size === 4) {
+            const d = await this.readUint32()
+            return MacintoshDate.from(d)
+        }
+        else if (size === 8) {
+            const d = await this.readBigUint64()
+            return MacintoshDate.from(Number(d))
+        }
+        else {
+            throw new RangeError('size must be 4 or 8; got ' + size)
+        }
     }
 
     async readMatrix() {

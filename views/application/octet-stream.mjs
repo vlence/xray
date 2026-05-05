@@ -10,159 +10,114 @@ const log = console
  * ASCII.
  */
 export default class BinaryRenderer extends Renderer {
-    /** @type {HTMLDivElement} */ 
-    #container
+    /** @type {HTMLElement} */ 
+    container
 
-    /** @type {Uint8Array<ArrayBuffer>[]} */
-    #pages = []
+    currentPage = 0
 
-    #bytesPerRow = 16
+    totalPages = 0
+
+    bytesPerRow = 16
     
-    #rowsPerPage = 16
+    rowsPerPage = 32
+
+    /**
+     * @type {Uint8Array<ArrayBuffer>[]}
+     */
+    dataRows = []
+
+    /**
+     * @type {HTMLTableRowElement[]}
+     */
+    tableRows = []
+
+    /**
+     * @type {HTMLElement}
+     */
+    tbody
+
+    /**
+     * @type {HTMLButtonElement}
+     */
+    prevBtn
+
+    /**
+     * @type {HTMLButtonElement}
+     */
+    nextBtn
+
+    /**
+     * @type {HTMLInputElement}
+     */
+    pageInput
 
     constructor() {
         super()
 
         const div = document.createElement('div')
 
-        div.appendChild(this.#initPageNav())
-        div.appendChild(this.#initTable())
+        const pageNav = document.createElement('nav')
+        const prevBtn = document.createElement('button')
+        const nextBtn = document.createElement('button')
+        const pageInput = document.createElement('input')
 
-        this.#container = div
-    }
-
-    #initTable() {
         const table = document.createElement('table')
         const thead = document.createElement('thead')
         const tbody = document.createElement('tbody')
 
-        table.style.fontFamily = 'monospace'
-
-        thead.innerHTML = `
-            <tr>
-                <th></th>
-                <th>0</th>
-                <th>1</th>
-                <th>2</th>
-                <th>3</th>
-                <th>4</th>
-                <th>5</th>
-                <th>6</th>
-                <th>7</th>
-                <th>8</th>
-                <th>9</th>
-                <th>A</th>
-                <th>B</th>
-                <th>C</th>
-                <th>D</th>
-                <th>E</th>
-                <th>F</th>
-            </tr>
-        `
-
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < this.rowsPerPage; i++) {
             const tr = document.createElement('tr')
-            tr.classList.add('data')
+            tr.innerHTML = `<th class="offset" scope="row"></th><td class="hex"></td><td class="ascii"></td>`
 
-            tr.innerHTML = `
-                <th scope="row" class="address"></th>
-                <td class="x0"></td>
-                <td class="x1"></td>
-                <td class="x2"></td>
-                <td class="x3"></td>
-                <td class="x4"></td>
-                <td class="x5"></td>
-                <td class="x6"></td>
-                <td class="x7"></td>
-                <td class="x8"></td>
-                <td class="x9"></td>
-                <td class="xA"></td>
-                <td class="xB"></td>
-                <td class="xC"></td>
-                <td class="xD"></td>
-                <td class="xE"></td>
-                <td class="xF"></td>
-            `
-
-            tbody.appendChild(tr)
+            this.tableRows.push(tr)
         }
 
+        prevBtn.innerText = 'Prev'
+        nextBtn.innerText = 'Next'
+        prevBtn.disabled = true
+        nextBtn.disabled = true
+
+        prevBtn.addEventListener('click', () => this.prevPage())
+        nextBtn.addEventListener('click', () => this.nextPage())
+
+        pageInput.type = 'number'
+        pageInput.min = '1'
+        pageInput.addEventListener('change', () => this.jumpToPage())
+
+        pageNav.appendChild(prevBtn)
+        pageNav.appendChild(pageInput)
+        pageNav.appendChild(nextBtn)
+
+        this.prevBtn = prevBtn
+        this.nextBtn = nextBtn
+        this.pageInput = pageInput
+
+        thead.innerHTML = `<tr>
+            <th scope="col"></th>
+            <th scope="col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</th>
+            <th scope="col"></th>
+        </tr>`
+
+        table.style.fontFamily = 'monospace'
+        table.style.textAlign = 'left'
         table.appendChild(thead)
         table.appendChild(tbody)
-        
-        return table
-    }
 
-    #initPageNav() {
-        /** @type {HTMLElement} */
-        const nav = document.createElement('nav')
-        /** @type {HTMLButtonElement} */
-        const nextBtn = document.createElement('button')
-        /** @type {HTMLButtonElement} */
-        const prevBtn = document.createElement('button')
-        const currentPageText = document.createTextNode('1')
+        this.tbody = tbody
 
-        let currentPage = 0
+        div.appendChild(pageNav)
+        div.appendChild(table)
 
-        prevBtn.textContent = 'Back'
-        nextBtn.textContent = 'Next'
-
-        prevBtn.disabled = true
-
-        nextBtn.addEventListener('click', () => {
-            const last = this.#pages.length-1
-
-            currentPage++
-
-            if (currentPage == last) {
-                nextBtn.disabled = true
-            }
-
-            prevBtn.disabled = false
-
-            requestAnimationFrame(() => {
-                currentPageText.textContent = (currentPage+1).toString(10)
-                this.#renderPage(currentPage)
-            })
-        })
-
-        prevBtn.addEventListener('click', () => {
-            currentPage--
-
-            if (currentPage == 0) {
-                prevBtn.disabled = true
-            }
-
-            nextBtn.disabled = false
-
-            requestAnimationFrame(() => {
-                currentPageText.textContent = (currentPage+1).toString(10)
-                this.#renderPage(currentPage)
-            })
-        })
-
-        nav.appendChild(prevBtn)
-        nav.appendChild(currentPageText)
-        nav.appendChild(nextBtn)
-
-        return nav
-    }
-
-    #clearRows() {
-        const rows = this.#container.querySelectorAll('tr.data')
-        for (const row of rows) {
-            const children = row.children
-
-            for (const child of children) {
-                child.innerHTML = ''
-            }
-        }
+        this.container = div
     }
 
     /**
      * @param {ReadableStream<Uint8Array<ArrayBuffer>>|Blob} blobOrStream
      */
     render(blobOrStream) {
+        /**
+         * @type {ReadableStream<Uint8Array<ArrayBuffer>>}
+         */
         let stream
 
         if (blobOrStream instanceof Blob) {
@@ -174,67 +129,159 @@ export default class BinaryRenderer extends Renderer {
 
         if (stream) {
             const reader = new ByteReader(stream)
-            const bytesPerPage = this.#bytesPerRow * this.#rowsPerPage
-            const page = new Uint8Array(bytesPerPage)
 
-            this.#pages = []
-
-            reader.read(page)
-                .then(async () => {
-                    // render the first page immediately
-                    this.#pages.push(page)
-                    requestAnimationFrame(() => this.#renderPage(0))
-
-                    while (!reader.done()) {
-                        const nextPage = new Uint8Array(bytesPerPage)
-                        await reader.read(nextPage)
-                        this.#pages.push(nextPage)
-                    }
-                })
+            this.readStream(reader)
         }
 
-        return this.#container
+        return this.container
     }
 
     /**
-     * @param {number} idx
+     * @param {ByteReader} reader
      */
-    #renderPage(idx) {
-        this.#clearRows()
+    async readStream(reader) {
+        let row = 0
+        let pages = 0
 
-        const ascii = textDecoders.get('ascii')
+        while (!reader.done()) {
+            const dataRow = new Uint8Array(this.bytesPerRow)
+            const n = await reader.read(dataRow)
+            this.dataRows.push(dataRow.subarray(0, n))
 
-        /** @type {NodeList} */
-        const rows = this.#container.querySelectorAll('tr.data')
-        const page = this.#pages[idx]
-        const bytesPerRow = this.#bytesPerRow
+            row++
 
-        let addr = idx * this.#bytesPerRow * this.#rowsPerPage
+            if (row % this.rowsPerPage) {
+                pages++
+            }
 
-        for (
-            let byteIdx = 0, rowIdx = 0;
-            byteIdx < page.byteLength && rowIdx < this.#rowsPerPage;
-            byteIdx += bytesPerRow, addr += bytesPerRow, rowIdx++
-        ) {
-            const row = rows[rowIdx]
-            const bytes16 = page.subarray(byteIdx, byteIdx+bytesPerRow)
+            if (pages == 1) {
+                this.renderPage(0)
+            }
+        }
 
-            const th = row.querySelector('th')
-            th.innerHTML = '<br>' + addr.toString(16).padStart(8, '0').toUpperCase()
+        if (pages == 0) {
+            this.renderPage(0)
+            pages = 1
+        }
 
-            for (let i = 0; i < bytes16.byteLength; i++) {
-                const td = row.querySelector('td.x' + i.toString(16).toUpperCase())
-                const byte = bytes16[i]
+        this.totalPages = pages
 
-                let ch = ascii.decode(bytes16.subarray(i, i+1))
-                const hex = byte.toString(16).padStart(2, '0')
+        if (pages > 1) {
+            this.nextBtn.disabled = false
+        }
+    }
 
-                if (byte <= 32 || byte >= 127) {
-                    ch = ''
+    clearPage() {
+        requestAnimationFrame(() => {
+            for (const tr of this.tableRows) {
+                this.tbody.removeChild(tr)
+            }
+        })
+    }
+
+    renderPage(i) {
+        this.clearPage()
+
+        requestAnimationFrame(() => {
+            for (let tableRowIdx = 0, dataRowIdx = i * this.rowsPerPage, offset = i * (this.bytesPerRow * this.rowsPerPage)
+                ; tableRowIdx < this.rowsPerPage && dataRowIdx < this.dataRows.length
+                ; tableRowIdx++, dataRowIdx++, offset += this.bytesPerRow
+            ) {
+                const tr = this.tableRows[tableRowIdx]
+                const dataRow = this.dataRows[dataRowIdx]
+
+                const offsetTh = tr.querySelector('.offset')
+                const hexTd = tr.querySelector('.hex')
+                const asciiTd = tr.querySelector('.ascii')
+
+                const asciiArr = dataRow.map(byte => byte >= 32 && byte <= 126 ? byte : '.'.charCodeAt(0))
+                const hexArr = []
+
+                for (const byte of dataRow) {
+                    hexArr.push(byte.toString(16).padStart(2, '0'))
                 }
 
-                td.innerHTML = `${ch}<br>${hex}`
+                offsetTh.innerText = offset.toString(16).padStart(8, '0')
+                hexTd.innerText = hexArr.join('\t')
+                asciiTd.innerText = textDecoders.get('ascii').decode(asciiArr)
+
+                this.tbody.appendChild(tr)
             }
+
+            this.pageInput.value = (i+1).toString(10)
+        })
+    }
+
+    nextPage() {
+        const lastPage = this.totalPages - 1
+
+        if (this.currentPage == lastPage) {
+            return
+        }
+
+        this.currentPage++
+
+        this.renderPage(this.currentPage)
+
+        if (this.currentPage == lastPage) {
+            this.nextBtn.disabled = true
+        }
+
+        if (this.currentPage != 0) {
+            this.prevBtn.disabled = false
+        }
+    }
+
+    prevPage() {
+        const lastPage = this.totalPages - 1
+
+        if (this.currentPage == 0) {
+            return
+        }
+
+        this.currentPage--
+
+        this.renderPage(this.currentPage)
+
+        if (this.currentPage == 0) {
+            this.prevBtn.disabled = true
+        }
+
+        if (this.currentPage != lastPage) {
+            this.nextBtn.disabled = false
+        }
+    }
+
+    jumpToPage() {
+        const v = parseInt(this.pageInput.value)
+        const i = v - 1
+        const lastPage = this.totalPages - 1
+
+        if (v < 1) {
+            return
+        }
+
+        if (v > this.totalPages) {
+            return
+        }
+
+        this.renderPage(i)
+        this.currentPage = i
+
+        if (i == 0) {
+            this.prevBtn.disabled = true
+        }
+
+        if (i > 0) {
+            this.prevBtn.disabled = false
+        }
+
+        if (i < lastPage) {
+            this.nextBtn.disabled = false
+        }
+
+        if (i == lastPage) {
+            this.nextBtn.disabled = true
         }
     }
 

@@ -40,7 +40,7 @@ export default class QuickTimeRenderer extends Renderer {
         super()
 
         const div = document.createElement('div')
-        div.innerHTML = `<video style="width: 100%;" controls></video>`
+        div.innerHTML = `<video style="width: 100%; max-width: 640px;" controls></video>`
 
         this.container = div
 

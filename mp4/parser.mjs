@@ -1,4 +1,5 @@
 import QuickTimeParser from "../quicktime/parser.mjs"
+import { ftypBoxParser } from "./box.ftyp.mjs"
 import { metaBoxParser } from "./box.meta.mjs"
 import { mvhdBoxParser } from "./box.mvhd.mjs"
 
@@ -16,5 +17,6 @@ export default class MP4Parser extends QuickTimeParser {
 
         this.defineParser('meta', metaBoxParser)
         this.defineParser('mvhd', mvhdBoxParser)
+        this.defineParser('ftyp', ftypBoxParser)
     }
 }

@@ -5,7 +5,6 @@ import streamToBlob from '../../utils/streamtoblob.mjs'
 import Atom from '../../quicktime/atom.mjs'
 import MvhdAtom from '../../quicktime/atom.mvhd.mjs'
 import TkhdAtom from '../../quicktime/atom.tkhd.mjs'
-import TrakAtom from '../../quicktime/atom.trak.mjs'
 import MoovAtom from '../../quicktime/atom.moov.mjs'
 import Matrix from '../../quicktime/matrix.mjs'
 import ElstAtom from '../../quicktime/atom.elst.mjs'
@@ -20,7 +19,6 @@ import TfhdAtom from '../../quicktime/atom.tfhd.mjs'
 import MfhdAtom from '../../quicktime/atom.mfhd.mjs'
 import TfdtAtom from '../../quicktime/atom.tfdt.mjs'
 import TrunAtom from '../../quicktime/atom.trun.mjs'
-import MetaAtom from '../../quicktime/atom.meta.mjs'
 import TrexAtom from '../../quicktime/atom.trex.mjs'
 import DataAtom from '../../quicktime/atom.data.mjs'
 
@@ -230,15 +228,15 @@ export default class QuickTimeRenderer extends Renderer {
         details.innerHTML = `
             <tr>
                 <th scope="row">Major brand</th>
-                <td>${atom.majorBrand}</td>
+                <td>${atom.getMajorBrandString()}</td>
             </tr>
             <tr>
-                <th scope="row">Minor brand</th>
-                <td>${atom.minorBrand}</td>
+                <th scope="row">Minor version</th>
+                <td>${atom.getMinorVersionString()}</td>
             </tr>
             <tr>
-                <th scope="row">Compatible brand</th>
-                <td>${atom.compatibleBrands.join(', ')}</td>
+                <th scope="row">Compatible brands</th>
+                <td>${atom.getCompatibleBrandsString()}</td>
             </tr>
         `
 

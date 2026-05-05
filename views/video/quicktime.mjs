@@ -21,6 +21,7 @@ import TfdtAtom from '../../quicktime/atom.tfdt.mjs'
 import TrunAtom from '../../quicktime/atom.trun.mjs'
 import TrexAtom from '../../quicktime/atom.trex.mjs'
 import DataAtom from '../../quicktime/atom.data.mjs'
+import ClefAtom from '../../quicktime/atom.clef.mjs'
 
 const log = console
 
@@ -55,6 +56,9 @@ export default class QuickTimeRenderer extends Renderer {
         this.atomDetailsRenderers['trun'] = this.renderTrunAtomDetails.bind(this)
         this.atomDetailsRenderers['vmhd'] = this.renderVmhdAtomDetails.bind(this)
         this.atomDetailsRenderers['hdlr'] = this.renderHdlrAtomDetails.bind(this)
+        this.atomDetailsRenderers['clef'] = this.renderClefAtomDetails.bind(this)
+        this.atomDetailsRenderers['prof'] = this.renderClefAtomDetails.bind(this)
+        this.atomDetailsRenderers['enof'] = this.renderClefAtomDetails.bind(this)
     }
 
     /**
@@ -587,6 +591,36 @@ export default class QuickTimeRenderer extends Renderer {
             <tr>
                 <th scope="row">Default sample flags</th>
                 <td>${atom.defaultSampleFlagsPresent() ? '0x'+atom.defaultSampleFlags.toString(16).padStart(8, '0') : 'Undefined'}</td>
+            </tr>
+        </table>`
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {ClefAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    renderClefAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(8, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Width</th>
+                <td>${atom.width}</td>
+            </tr>
+            <tr>
+                <th scope="row">Height</th>
+                <td>${atom.height}</td>
             </tr>
         </table>`
 

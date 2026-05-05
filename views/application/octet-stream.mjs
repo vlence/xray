@@ -21,6 +21,13 @@ export default class BinaryRenderer extends Renderer {
     
     rowsPerPage = 32
 
+    bigPageSize = 4096
+
+    /**
+     * @type {Uint8Array<ArrayBuffer>[]}
+     */
+    bigPages = []
+
     /**
      * @type {Uint8Array<ArrayBuffer>[]}
      */
@@ -140,33 +147,27 @@ export default class BinaryRenderer extends Renderer {
      * @param {ByteReader} reader
      */
     async readStream(reader) {
-        let row = 0
-        let pages = 0
+        let bytesRead = 0
+        const bytesPerPage = this.rowsPerPage * this.bytesPerRow
 
         while (!reader.done()) {
-            const dataRow = new Uint8Array(this.bytesPerRow)
-            const n = await reader.read(dataRow)
-            this.dataRows.push(dataRow.subarray(0, n))
+            const bigPage = new Uint8Array(4096)
+            const n = await reader.read(bigPage)
 
-            row++
-
-            if (row % this.rowsPerPage) {
-                pages++
-            }
-
-            if (pages == 1) {
-                this.renderPage(0)
-            }
+            this.bigPages.push(bigPage.subarray(0, n))
+            
+            bytesRead += n
         }
 
-        if (pages == 0) {
-            this.renderPage(0)
-            pages = 1
-        }
+        const rows = Math.floor(bytesRead / this.bytesPerRow)
+        const pages = Math.floor(rows / this.rowsPerPage)
 
         this.totalPages = pages
+        this.currentPage = 0
 
-        if (pages > 1) {
+        this.renderPage(0)
+
+        if (bytesRead > bytesPerPage) {
             this.nextBtn.disabled = false
         }
     }
@@ -179,16 +180,27 @@ export default class BinaryRenderer extends Renderer {
         })
     }
 
-    renderPage(i) {
+    /**
+     * @param {number} pageNumber starts from 1
+     */
+    renderPage(pageNumber) {
         this.clearPage()
 
+        const bytesPerPage = this.bytesPerRow * this.rowsPerPage
+        const globalByteOffset = pageNumber * bytesPerPage // where this byte is relative to the beginning of the file
+        const bigPageIdx = Math.floor(globalByteOffset / this.bigPageSize)
+        const offsetWithinBigPage = globalByteOffset - (bigPageIdx * this.bigPageSize) // where this byte is relative to this big page
+
+        const bigPage = this.bigPages[bigPageIdx]
+        const page = bigPage.subarray(offsetWithinBigPage, offsetWithinBigPage+bytesPerPage)
+
         requestAnimationFrame(() => {
-            for (let tableRowIdx = 0, dataRowIdx = i * this.rowsPerPage, offset = i * (this.bytesPerRow * this.rowsPerPage)
-                ; tableRowIdx < this.rowsPerPage && dataRowIdx < this.dataRows.length
-                ; tableRowIdx++, dataRowIdx++, offset += this.bytesPerRow
+            for (let tableRowIdx = 0, dataRowOffset = 0, addr = globalByteOffset
+                ; tableRowIdx < this.rowsPerPage && dataRowOffset < page.length
+                ; tableRowIdx++, dataRowOffset += this.bytesPerRow, addr += this.bytesPerRow
             ) {
                 const tr = this.tableRows[tableRowIdx]
-                const dataRow = this.dataRows[dataRowIdx]
+                const dataRow = page.subarray(dataRowOffset, dataRowOffset+this.bytesPerRow)
 
                 const offsetTh = tr.querySelector('.offset')
                 const hexTd = tr.querySelector('.hex')
@@ -201,14 +213,14 @@ export default class BinaryRenderer extends Renderer {
                     hexArr.push(byte.toString(16).padStart(2, '0'))
                 }
 
-                offsetTh.innerText = offset.toString(16).padStart(8, '0')
+                offsetTh.innerText = addr.toString(16).padStart(8, '0')
                 hexTd.innerText = hexArr.join('\t')
                 asciiTd.innerText = textDecoders.get('ascii').decode(asciiArr)
 
                 this.tbody.appendChild(tr)
             }
 
-            this.pageInput.value = (i+1).toString(10)
+            this.pageInput.value = (pageNumber+1).toString(10)
         })
     }
 

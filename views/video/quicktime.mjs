@@ -59,6 +59,7 @@ export default class QuickTimeRenderer extends Renderer {
         this.atomDetailsRenderers['clef'] = this.renderClefAtomDetails.bind(this)
         this.atomDetailsRenderers['prof'] = this.renderClefAtomDetails.bind(this)
         this.atomDetailsRenderers['enof'] = this.renderClefAtomDetails.bind(this)
+        this.atomDetailsRenderers['elst'] = this.renderElstAtomDetails.bind(this)
     }
 
     /**

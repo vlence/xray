@@ -29,11 +29,6 @@ export default class BinaryRenderer extends Renderer {
     bigPages = []
 
     /**
-     * @type {Uint8Array<ArrayBuffer>[]}
-     */
-    dataRows = []
-
-    /**
      * @type {HTMLTableRowElement[]}
      */
     tableRows = []
@@ -133,6 +128,11 @@ export default class BinaryRenderer extends Renderer {
         else if (blobOrStream instanceof ReadableStream) {
             stream = blobOrStream
         }
+
+        // throw away everything from the previous render
+        this.bigPages = []
+        this.currentPage = 0
+        this.totalPages = 0
 
         if (stream) {
             const reader = new ByteReader(stream)

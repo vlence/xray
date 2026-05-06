@@ -215,7 +215,7 @@ export default class BinaryRenderer extends Renderer {
 
                 offsetTh.innerText = addr.toString(16).padStart(8, '0')
                 hexTd.innerText = hexArr.join('\t')
-                asciiTd.innerText = textDecoders.get('ascii').decode(asciiArr)
+                asciiTd.innerHTML = `<pre style="margin: 0px;">${textDecoders.get('ascii').decode(asciiArr)}</pre>`
 
                 this.tbody.appendChild(tr)
             }

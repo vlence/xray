@@ -25,6 +25,7 @@ import ClefAtom from '../../quicktime/atom.clef.mjs'
 import KeysAtom from '../../quicktime/atom.keys.mjs'
 import StsdAtom, { VideoSampleDescription, videoSampleTypes } from '../../quicktime/atom.stsd.mjs'
 import ColrAtom from '../../quicktime/atom.colr.mjs'
+import SdtpAtom from '../../quicktime/atom.sdtp.mjs'
 
 const log = console
 
@@ -65,6 +66,7 @@ export default class QuickTimeRenderer extends Renderer {
         this.atomDetailsRenderers['elst'] = this.renderElstAtomDetails.bind(this)
         this.atomDetailsRenderers['keys'] = this.renderKeysAtomDetails.bind(this)
         this.atomDetailsRenderers['colr'] = this.renderColrAtomDetails.bind(this)
+        this.atomDetailsRenderers['sdtp'] = this.renderSdtpAtomDetails.bind(this)
         // this.atomDetailsRenderers['stsd'] = this.renderStsdAtomDetails.bind(this)
         
         for (const type of videoSampleTypes) {
@@ -622,6 +624,78 @@ export default class QuickTimeRenderer extends Renderer {
         </table>`
 
         atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {SdtpAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    renderSdtpAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+        </table>`
+
+        atomElem.appendChild(details)
+
+        const entriesTable = document.createElement('table')
+        entriesTable.innerHTML = `<tr>
+            <th></th>
+            <th>Earlier display time allowed</th>
+            <th>Sample does not depend on others</th>
+            <th>Sample depends on others</th>
+            <th>No other sample depends on this sample</th>
+            <th>Other samples depend on this sample</th>
+            <th>There is no redundant coding in this sample</th>
+            <th>There is redundant coding in this sample</th>
+        </tr>`
+
+        for (let i = 0; i < atom.sampleFlags.length && i < 10; i++) {
+            const flags = atom.sampleFlags[i]
+            const row = document.createElement('tr')
+            row.innerHTML = `
+                <th scope="row">${i+1}</th>
+                <td>
+                    <input type="checkbox" disabled ${flags.earlierDisplayTimeAllowed ? 'checked' : ''}>
+                </td>
+                <td>
+                    <input type="checkbox" disabled ${flags.sampleDoesNotDependOnOthers ? 'checked' : ''}>
+                </td>
+                <td>
+                    <input type="checkbox" disabled ${flags.sampleDependsOnOthers ? 'checked' : ''}>
+                </td>
+                <td>
+                    <input type="checkbox" disabled ${flags.noOtherSampleDependsOnThisSample ? 'checked' : ''}>
+                </td>
+                <td>
+                    <input type="checkbox" disabled ${flags.otherSamplesDependOnThisSample ? 'checked' : ''}>
+                </td>
+                <td>
+                    <input type="checkbox" disabled ${flags.thereIsNoRedundantCodingInThisSample ? 'checked' : ''}>
+                </td>
+                <td>
+                    <input type="checkbox" disabled ${flags.thereIsRedundantCodingInThisSample ? 'checked' : ''}>
+                </td>
+            `
+            entriesTable.appendChild(row)
+        }
+
+        atomElem.appendChild(entriesTable)
+        
+        if (atom.sampleFlags.length >= 10) {
+            const others = document.createElement('p')
+            others.innerText = (atom.sampleFlags.length - 10) + ' more samples'
+            atomElem.appendChild(others)
+        }
     }
 
     /**

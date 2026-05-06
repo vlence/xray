@@ -61,9 +61,8 @@ export async function dataAtomParser(reader, atomTemplate, scanner) {
     atom.localeIndicator = await reader.readUint32()
 
     const bytesRemaining = atom.getDataSize() - 4 - 4
-    atom.value = new Uint8Array(bytesRemaining)
-
-    await reader.read(atom.value)
+    atom.data = await reader.readBlob(bytesRemaining)
+    atom.value = await atom.data.bytes()
 
     return atom
 }

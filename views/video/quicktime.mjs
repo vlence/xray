@@ -24,6 +24,7 @@ import DataAtom from '../../quicktime/atom.data.mjs'
 import ClefAtom from '../../quicktime/atom.clef.mjs'
 import KeysAtom from '../../quicktime/atom.keys.mjs'
 import StsdAtom, { VideoSampleDescription, videoSampleTypes } from '../../quicktime/atom.stsd.mjs'
+import ColrAtom from '../../quicktime/atom.colr.mjs'
 
 const log = console
 
@@ -63,6 +64,7 @@ export default class QuickTimeRenderer extends Renderer {
         this.atomDetailsRenderers['enof'] = this.renderClefAtomDetails.bind(this)
         this.atomDetailsRenderers['elst'] = this.renderElstAtomDetails.bind(this)
         this.atomDetailsRenderers['keys'] = this.renderKeysAtomDetails.bind(this)
+        this.atomDetailsRenderers['colr'] = this.renderColrAtomDetails.bind(this)
         // this.atomDetailsRenderers['stsd'] = this.renderStsdAtomDetails.bind(this)
         
         for (const type of videoSampleTypes) {
@@ -586,6 +588,36 @@ export default class QuickTimeRenderer extends Renderer {
             <tr>
                 <th scope="row">Color table ID</th>
                 <td>${atom.colorTableID}</td>
+            </tr>
+        </table>`
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {ColrAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    renderColrAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table style="margin-top: 0.5em;">
+            <tr>
+                <th scope="row">Color parameter type</th>
+                <td>${atom.colorParameterType}</td>
+            </tr>
+            <tr>
+                <th scope="row">Primaries index</th>
+                <td>${atom.primariesIndex}</td>
+            </tr>
+            <tr>
+                <th scope="row">Transfer function index</th>
+                <td>${atom.transferFunctionIndex}</td>
+            </tr>
+            <tr>
+                <th scope="row">Matrix index</th>
+                <td>${atom.matrixIndex}</td>
             </tr>
         </table>`
 

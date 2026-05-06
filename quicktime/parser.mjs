@@ -47,6 +47,7 @@ import { mvexAtomParser } from './atom.mvex.mjs'
 import { trexAtomParser } from './atom.trex.mjs'
 import { stblAtomParser } from './atom.stbl.mjs'
 import { keysAtomParser } from './atom.keys.mjs'
+import { colrAtomParser } from './atom.colr.mjs'
 
 const log = console
 
@@ -111,5 +112,6 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('trex', trexAtomParser)
         this.defineParser('stbl', stblAtomParser)
         this.defineParser('keys', keysAtomParser)
+        this.defineParser('colr', colrAtomParser)
     }
 }

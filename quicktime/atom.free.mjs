@@ -25,7 +25,7 @@ export async function freeAtomParser(reader, atomTemplate, scanner) {
     atom.extendedSize = atomTemplate.extendedSize
     atom.parent = atomTemplate.parent
 
-    await reader.skip(atom.getDataSize())
+    atom.data = await reader.readBlob(atom.getDataSize())
 
     return atom
 }

@@ -277,4 +277,9 @@ export class SoundSampleDescription extends SampleDescriptionAtom {
 }
 
 export class V0SoundSampleDescription extends SoundSampleDescription {
+    numberOfChannels
+    sampleSize
+    compressionID
+    packetSize
+    sampleRate
 }

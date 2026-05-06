@@ -22,6 +22,7 @@ import TrunAtom from '../../quicktime/atom.trun.mjs'
 import TrexAtom from '../../quicktime/atom.trex.mjs'
 import DataAtom from '../../quicktime/atom.data.mjs'
 import ClefAtom from '../../quicktime/atom.clef.mjs'
+import KeysAtom from '../../quicktime/atom.keys.mjs'
 
 const log = console
 
@@ -60,6 +61,7 @@ export default class QuickTimeRenderer extends Renderer {
         this.atomDetailsRenderers['prof'] = this.renderClefAtomDetails.bind(this)
         this.atomDetailsRenderers['enof'] = this.renderClefAtomDetails.bind(this)
         this.atomDetailsRenderers['elst'] = this.renderElstAtomDetails.bind(this)
+        this.atomDetailsRenderers['keys'] = this.renderKeysAtomDetails.bind(this)
     }
 
     /**
@@ -461,6 +463,52 @@ export default class QuickTimeRenderer extends Renderer {
 
         atomElem.appendChild(details)
         atomElem.appendChild(samplesTable)
+    }
+
+    /**
+     * @param {KeysAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    renderKeysAtomDetails(atom, atomElem) {
+        /** @type {MoovAtom} */
+        const moov = atom.findParentByType('moov')
+        /** @type {MvhdAtom} */
+        const mvhd = moov.findByType('mvhd')
+
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        const entriesTable = document.createElement('table')
+        entriesTable.innerHTML = `<tr>
+            <th></th>
+            <th scope="col">Namespace</th>
+            <th scope="col">Value</th>
+        </tr>`
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+        </table>`
+
+        for (let i = 0; i < atom.keys.length; i++) {
+            const key = atom.keys[i]
+            const row = document.createElement('tr')
+            row.innerHTML = `
+                <th scope="col">${i+1}</th>
+                <th scope="col">${key.namespace}</th>
+                <th scope="col">${key.value}</th>
+            `
+            entriesTable.appendChild(row)
+        }
+
+        atomElem.appendChild(details)
+        atomElem.appendChild(entriesTable)
     }
 
     /**

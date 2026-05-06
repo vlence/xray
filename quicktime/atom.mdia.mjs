@@ -1,5 +1,5 @@
 import ElngAtom from './atom.elng.mjs'
-import { HandlerReferenceAtom } from './atom.hdlr.mjs'
+import { HdlrAtom } from './atom.hdlr.mjs'
 import MdhdAtom from './atom.mdhd.mjs'
 import MinfAtom from './atom.minf.mjs'
 import Atom from './atom.mjs'
@@ -31,7 +31,7 @@ export default class MdiaAtom extends Atom {
     extendedLanguageTag
 
     /**
-     * @type {HandlerReferenceAtom}
+     * @type {HdlrAtom}
      */
     handler
 
@@ -76,7 +76,7 @@ export async function mdiaAtomParser(reader, atomTemplate, scanner) {
         else if (nextAtom instanceof ElngAtom) {
             atom.extendedLanguageTag = nextAtom
         }
-        else if (nextAtom instanceof HandlerReferenceAtom) {
+        else if (nextAtom instanceof HdlrAtom) {
             atom.handler = nextAtom
         }
         else if (nextAtom instanceof MinfAtom) {

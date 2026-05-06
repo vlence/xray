@@ -10,7 +10,7 @@ import Matrix from '../../quicktime/matrix.mjs'
 import ElstAtom from '../../quicktime/atom.elst.mjs'
 import BinaryRenderer from '../application/octet-stream.mjs'
 import MdhdAtom from '../../quicktime/atom.mdhd.mjs'
-import { HandlerReferenceAtom, MetadataHandlerAtom } from '../../quicktime/atom.hdlr.mjs'
+import { HdlrAtom, MetaHdlrAtom } from '../../quicktime/atom.hdlr.mjs'
 import VmhdAtom from '../../quicktime/atom.vmhd.mjs'
 
 import * as QuickTimeLanguage from '../../quicktime/language.mjs'
@@ -56,7 +56,7 @@ export default class QuickTimeRenderer extends Renderer {
         this.atomDetailsRenderers['trex'] = this.renderTrexAtomDetails.bind(this)
         this.atomDetailsRenderers['trun'] = this.renderTrunAtomDetails.bind(this)
         this.atomDetailsRenderers['vmhd'] = this.renderVmhdAtomDetails.bind(this)
-        this.atomDetailsRenderers['hdlr'] = this.renderHdlrAtomDetails.bind(this)
+        this.atomDetailsRenderers['hdlr'] = this.renderHandlerAtomDetails.bind(this)
         this.atomDetailsRenderers['clef'] = this.renderClefAtomDetails.bind(this)
         this.atomDetailsRenderers['prof'] = this.renderClefAtomDetails.bind(this)
         this.atomDetailsRenderers['enof'] = this.renderClefAtomDetails.bind(this)
@@ -183,12 +183,12 @@ export default class QuickTimeRenderer extends Renderer {
      * @param {Atom} atom
      * @param {HTMLElement} atomDiv
      */
-    renderHdlrAtomDetails(atom, atomDiv) {
-        if (atom instanceof HandlerReferenceAtom) {
-            this.renderHandlerReferenceAtomDetails(atom, atomDiv)
+    renderHandlerAtomDetails(atom, atomDiv) {
+        if (atom instanceof MetaHdlrAtom) {
+            this.renderMetaHdlrAtomDetails(atom, atomDiv)
         }
-        else if (atom instanceof MetadataHandlerAtom) {
-            this.renderMetadataHandlerAtomDetails(atom, atomDiv)
+        else {
+            this.renderHdlrAtomDetails(atom, atomDiv)
         }
     }
 
@@ -251,10 +251,10 @@ export default class QuickTimeRenderer extends Renderer {
     }
 
     /**
-     * @param {MetadataHandlerAtom} atom
+     * @param {MetaHdlrAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    renderMetadataHandlerAtomDetails(atom, atomElem) {
+    renderMetaHdlrAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -269,11 +269,11 @@ export default class QuickTimeRenderer extends Renderer {
             </tr>
             <tr>
                 <th scope="row">Handler name</th>
-                <td>${atom.name}</td>
+                <td>${atom.componentName}</td>
             </tr>
             <tr>
                 <th scope="row">Handler type</th>
-                <td>${atom.handlerType}</td>
+                <td>${atom.handlerType()}</td>
             </tr>
         </table>`
 
@@ -327,10 +327,10 @@ export default class QuickTimeRenderer extends Renderer {
     }
 
     /**
-     * @param {HandlerReferenceAtom} atom
+     * @param {HdlrAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
-    renderHandlerReferenceAtomDetails(atom, atomElem) {
+    renderHdlrAtomDetails(atom, atomElem) {
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 

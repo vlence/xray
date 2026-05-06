@@ -1,4 +1,3 @@
-import MdiaAtom from './atom.mdia.mjs'
 import MetaAtom from './atom.meta.mjs'
 import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
@@ -16,7 +15,7 @@ const log = console
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/handler_reference_atom}
  */
-export class HandlerReferenceAtom extends FullAtom {
+export class HdlrAtom extends FullAtom {
 
     /**
      * A four-character code that identifies the type of the handler.
@@ -50,17 +49,13 @@ export class HandlerReferenceAtom extends FullAtom {
     componentName = ''
 }
 
-export class MetadataHandlerAtom extends FullAtom {
-    /** Always 0 */
-    predefined = 0
-
-    /** @type {string} */
-    handlerType
-
-    /**
-     * @type {string}
-     */
-    name
+/**
+ * A 'hdlr' atom inside a 'meta' atom
+ */
+export class MetaHdlrAtom extends HdlrAtom {
+    handlerType() {
+        return this.componentSubtype
+    }
 }
 
 /**
@@ -71,12 +66,41 @@ export class MetadataHandlerAtom extends FullAtom {
  * @param {AtomScanner} scanner
  */
 export async function hdlrAtomParser(reader, atomTemplate, scanner) {
-    if (atomTemplate.parent instanceof MetaAtom) {
-        return metadataHandlerAtomParser(reader, atomTemplate, scanner)
+    const atom = atomTemplate.parent instanceof MetaAtom ? new MetaHdlrAtom() : new HdlrAtom()
+    atom.size = atomTemplate.size
+    atom.type = atomTemplate.type
+    atom.typeBytes = atomTemplate.typeBytes
+    atom.extendedSize = atomTemplate.extendedSize
+    atom.parent = atomTemplate.parent
+
+    atom.versionAndFlags = await reader.readUint32()
+
+    let bytesRemaining = atom.getDataSize()
+
+    atom.componentType = await reader.readUtf8String(4)
+    bytesRemaining -= 4
+
+    atom.componentSubtype = await reader.readUtf8String(4)
+    bytesRemaining -= 4
+
+    await reader.skip(4) // component manufacturer
+    bytesRemaining -= 4
+
+    await reader.skip(4) // component flags
+    bytesRemaining -= 4
+
+    await reader.skip(4) // component mask
+    bytesRemaining -= 4
+
+    if (bytesRemaining > 0) {
+        // this is supposed to be a counted string i.e. the first
+        // one or two bytes should provide the length of the string
+        // but many encoders don't follow this rule so we simply
+        // read all the remaining bytes as a string
+        atom.componentName = await reader.readUtf8String(bytesRemaining)
     }
-    else {
-        return handlerReferenceAtomParser(reader, atomTemplate, scanner)
-    }
+
+    return atom
 }
 
 /**
@@ -87,7 +111,7 @@ export async function hdlrAtomParser(reader, atomTemplate, scanner) {
  * @param {AtomScanner} scanner
  */
 export async function handlerReferenceAtomParser(reader, atomTemplate, scanner) {
-    const atom = new HandlerReferenceAtom()
+    const atom = new HdlrAtom()
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes
@@ -132,7 +156,7 @@ export async function handlerReferenceAtomParser(reader, atomTemplate, scanner) 
  * @param {AtomScanner} scanner
  */
 export async function metadataHandlerAtomParser(reader, atomTemplate, scanner) {
-    const atom = new MetadataHandlerAtom()
+    const atom = new MetaHdlrAtom()
     atom.size = atomTemplate.size
     atom.type = atomTemplate.type
     atom.typeBytes = atomTemplate.typeBytes

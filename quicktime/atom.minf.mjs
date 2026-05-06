@@ -1,5 +1,5 @@
 import DinfAtom from './atom.dinf.mjs'
-import { HandlerReferenceAtom } from './atom.hdlr.mjs'
+import { HdlrAtom } from './atom.hdlr.mjs'
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import VmhdAtom from './atom.vmhd.mjs'
@@ -29,7 +29,7 @@ export default class MinfAtom extends Atom {
     videoMediaInformationHeader
 
     /**
-     * @type {HandlerReferenceAtom}
+     * @type {HdlrAtom}
      */
     handler
 
@@ -64,7 +64,7 @@ export async function minfAtomParser(reader, atomTemplate, scanner) {
         atom.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
 
-        if (nextAtom instanceof HandlerReferenceAtom) {
+        if (nextAtom instanceof HdlrAtom) {
             atom.handler = nextAtom
         }
         else if (nextAtom instanceof VmhdAtom) {

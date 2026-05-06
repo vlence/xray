@@ -20,6 +20,35 @@ export default class KeysAtom extends FullAtom {
      * @type {Key[]}
      */
     keys = []
+
+    /**
+     * Returns the key at index `i`. The index is 1-based.
+     *
+     * @param {number} i 1-based index of the key.
+     *
+     * @returns {Key?}
+     */
+    keyAt(i) {
+        if (typeof i != 'number') {
+            return
+        }
+
+        if (isNaN(i)) {
+            return
+        }
+
+        i = i-1
+
+        if (i < 0) {
+            return
+        }
+
+        if (i >= this.keys.length) {
+            return
+        }
+
+        return this.keys[i]
+    }
 }
 
 export class Key {

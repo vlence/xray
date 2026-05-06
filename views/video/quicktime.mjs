@@ -23,6 +23,7 @@ import TrexAtom from '../../quicktime/atom.trex.mjs'
 import DataAtom from '../../quicktime/atom.data.mjs'
 import ClefAtom from '../../quicktime/atom.clef.mjs'
 import KeysAtom from '../../quicktime/atom.keys.mjs'
+import StsdAtom, { VideoSampleDescription, videoSampleTypes } from '../../quicktime/atom.stsd.mjs'
 
 const log = console
 
@@ -62,6 +63,11 @@ export default class QuickTimeRenderer extends Renderer {
         this.atomDetailsRenderers['enof'] = this.renderClefAtomDetails.bind(this)
         this.atomDetailsRenderers['elst'] = this.renderElstAtomDetails.bind(this)
         this.atomDetailsRenderers['keys'] = this.renderKeysAtomDetails.bind(this)
+        // this.atomDetailsRenderers['stsd'] = this.renderStsdAtomDetails.bind(this)
+        
+        for (const type of videoSampleTypes) {
+            this.atomDetailsRenderers[type] = this.renderVideoSampleDescriptionDetails.bind(this)
+        }
     }
 
     /**
@@ -202,9 +208,11 @@ export default class QuickTimeRenderer extends Renderer {
         if (fn) {
             fn(atom, atomDiv)
         }
-        else if (atom.data != null) {
+
+        if (atom.data != null) {
             const binaryRenderer = new BinaryRenderer()
             const hex = binaryRenderer.render(atom.data)
+            hex.style.marginTop = '0.5em'
             atomDiv.appendChild(hex)
         }
     }
@@ -452,11 +460,11 @@ export default class QuickTimeRenderer extends Renderer {
             const sample = atom.samples[i]
             const row = document.createElement('tr')
             row.innerHTML = `
-                <th scope="col">${i+1}</th>
-                <th scope="col">${atom.sampleDurationPresent() ? sample.duration : 'Undefined'}</th>
-                <th scope="col">${atom.sampleSizePresent() ? sample.size + ' bytes' : 'Undefined'}</th>
-                <th scope="col">${atom.sampleFlagsPresent() ? '0x'+sample.flags.toString(16).padStart(8, '0') : 'Undefined'}</th>
-                <th scope="col">${atom.sampleCompositionTimeOffsetsPresent() ? sample.compositionTimeOffset : 'Undefined'}</th>
+                <th scope="row">${i+1}</th>
+                <td>${atom.sampleDurationPresent() ? sample.duration : 'Undefined'}</td>
+                <td>${atom.sampleSizePresent() ? sample.size + ' bytes' : 'Undefined'}</td>
+                <td>${atom.sampleFlagsPresent() ? '0x'+sample.flags.toString(16).padStart(8, '0') : 'Undefined'}</td>
+                <td>${atom.sampleCompositionTimeOffsetsPresent() ? sample.compositionTimeOffset : 'Undefined'}</td>
             `
             samplesTable.appendChild(row)
         }
@@ -466,15 +474,129 @@ export default class QuickTimeRenderer extends Renderer {
     }
 
     /**
+     * @param {StsdAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    renderStsdAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        const entriesTable = document.createElement('table')
+        entriesTable.innerHTML = `<tr>
+            <th></th>
+            <th scope="col">Format</th>
+            <th scope="col">Reference index</th>
+            <th scope="col">Data</th>
+        </tr>`
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+        </table>`
+
+        for (let i = 0; i < atom.sampleDescriptions.length; i++) {
+            const desc = atom.sampleDescriptions[i]
+            const row = document.createElement('tr')
+            const binaryRenderer = new BinaryRenderer()
+            const hex = binaryRenderer.render(desc.data)
+
+            const dataCell = document.createElement('td')
+            dataCell.appendChild(hex)
+
+            row.innerHTML = `
+                <th scope="row">${i+1}</th>
+                <td>${desc.dataFormat}</td>
+                <td>${desc.dataReferenceIndex}</td>
+            `
+            row.appendChild(dataCell)
+            entriesTable.appendChild(row)
+        }
+
+        atomElem.appendChild(details)
+        atomElem.appendChild(entriesTable)
+    }
+
+    /**
+     * @param {VideoSampleDescription} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    renderVideoSampleDescriptionDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table style="margin-top: 0.5em;">
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version}</td>
+            </tr>
+            <tr>
+                <th scope="row">Revision level</th>
+                <td>${atom.revisionLevel}</td>
+            </tr>
+            <tr>
+                <th scope="row">Vendor</th>
+                <td>${atom.vendor}</td>
+            </tr>
+            <tr>
+                <th scope="row">Temporal quality</th>
+                <td>${atom.temporalQuality}</td>
+            </tr>
+            <tr>
+                <th scope="row">Spatial quality</th>
+                <td>${atom.spatialQuality}</td>
+            </tr>
+            <tr>
+                <th scope="row">Width</th>
+                <td>${atom.width}</td>
+            </tr>
+            <tr>
+                <th scope="row">Height</th>
+                <td>${atom.height}</td>
+            </tr>
+            <tr>
+                <th scope="row">Horizontal resolution</th>
+                <td>${atom.horizontalResolution} pixels per inch</td>
+            </tr>
+            <tr>
+                <th scope="row">Vertical resolution</th>
+                <td>${atom.verticalResolution} pixels per inch</td>
+            </tr>
+            <tr>
+                <th scope="row">Data size</th>
+                <td>${atom.dataSize}</td>
+            </tr>
+            <tr>
+                <th scope="row">Frame count</th>
+                <td>${atom.frameCount}</td>
+            </tr>
+            <tr>
+                <th scope="row">Compressor name</th>
+                <td>${atom.compressorName}</td>
+            </tr>
+            <tr>
+                <th scope="row">Depth</th>
+                <td>${atom.depth}</td>
+            </tr>
+            <tr>
+                <th scope="row">Color table ID</th>
+                <td>${atom.colorTableID}</td>
+            </tr>
+        </table>`
+
+        atomElem.appendChild(details)
+    }
+
+    /**
      * @param {KeysAtom} atom
      * @param {HTMLDetailsElement} atomElem
      */
     renderKeysAtomDetails(atom, atomElem) {
-        /** @type {MoovAtom} */
-        const moov = atom.findParentByType('moov')
-        /** @type {MvhdAtom} */
-        const mvhd = moov.findByType('mvhd')
-
         const details = document.createElement('table')
         details.style.marginTop = '0.5em'
 
@@ -500,9 +622,9 @@ export default class QuickTimeRenderer extends Renderer {
             const key = atom.keys[i]
             const row = document.createElement('tr')
             row.innerHTML = `
-                <th scope="col">${i+1}</th>
-                <th scope="col">${key.namespace}</th>
-                <th scope="col">${key.value}</th>
+                <th scope="row">${i+1}</th>
+                <td>${key.namespace}</td>
+                <td>${key.value}</td>
             `
             entriesTable.appendChild(row)
         }
@@ -547,10 +669,10 @@ export default class QuickTimeRenderer extends Renderer {
             const entry = atom.entries[i]
             const row = document.createElement('tr')
             row.innerHTML = `
-                <th scope="col">${i+1}</th>
-                <th scope="col">${entry.trackDuration / mvhd.timeScale}s</th>
-                <th scope="col">${entry.mediaTime / mvhd.timeScale}s</th>
-                <th scope="col">${entry.mediaRate}x</th>
+                <th scope="row">${i+1}</th>
+                <td>${entry.trackDuration / mvhd.timeScale}s</td>
+                <td>${entry.mediaTime / mvhd.timeScale}s</td>
+                <td>${entry.mediaRate}x</td>
             `
             entriesTable.appendChild(row)
         }

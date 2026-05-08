@@ -175,7 +175,7 @@ export default class BinaryRenderer extends Renderer {
     clearPage() {
         requestAnimationFrame(() => {
             for (const tr of this.tableRows) {
-                this.tbody.removeChild(tr)
+                tr.remove()
             }
         })
     }

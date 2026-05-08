@@ -2,14 +2,13 @@ import Renderer from "./renderer.mjs"
 import streamToBlob from "../utils/streamtoblob.mjs"
 
 /**
- * An ImageRenderer renders an image. You should use this as a fallback
- * if you don't have a more specialised renderer for your image type.
+ * Renders an image in a <img>
  */
-export default class ImageRenderer extends Renderer {
+export default class ImageView extends Renderer {
     /**
      * @type {HTMLElement}
      */
-    container
+    imgContainer
 
     /**
      * @type {HTMLImageElement}
@@ -19,7 +18,7 @@ export default class ImageRenderer extends Renderer {
     constructor() {
         super()
 
-        this.container = document.createElement('div')
+        this.imgContainer = document.createElement('div')
     }
 
     /**
@@ -40,23 +39,23 @@ export default class ImageRenderer extends Renderer {
      * @returns {Node}
      */
     render(blobOrStream) {
-        if (blobOrStream instanceof ReadableStream) {
-            streamToBlob(blobOrStream)
-                .then(blob => this.renderImg(blob))
-        }
-        else {
-            this.renderImg(blobOrStream)
-        }
+        this.renderImg(blobOrStream)
 
-        return this.getContainer()
+        return this.getImgContainer()
     }
 
     /**
-     * @param {Blob} blob
+     * @param {Blob|ReadableStream<Uint8Array<ArrayBuffer>>} blobOrStream
      */
-    renderImg(blob) {
+    async renderImg(blobOrStream) {
+        let blob = blobOrStream
+
+        if (blob instanceof ReadableStream) {
+            blob = await streamToBlob(blob)
+        }
+
         const img = this.getImg()
-        const container = this.getContainer()
+        const container = this.getImgContainer()
 
         img.remove()
 
@@ -66,15 +65,15 @@ export default class ImageRenderer extends Renderer {
     }
 
     unmount() {
-        this.container = null
+        this.imgContainer = null
     }
 
-    getContainer() {
-        if (!this.container) {
-            this.container = document.createElement('div')
+    getImgContainer() {
+        if (!this.imgContainer) {
+            this.imgContainer = document.createElement('div')
         }
 
-        return this.container
+        return this.imgContainer
     }
 
     getImg() {

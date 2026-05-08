@@ -435,4 +435,33 @@ export default class ByteReader {
             }
         }
     }
+
+    /**
+     * @param {number|bigint} n
+     */
+    async readBlob(n) {
+        let bytesRemaining = BigInt(n)
+
+        const bufs = []
+
+        const maxUint32 = 0xffffffff
+        const maxUint32BigInt = BigInt(maxUint32)
+
+        while (bytesRemaining > 0n) {
+            if (bytesRemaining > maxUint32BigInt) {
+                const buf = new Uint8Array(maxUint32)
+                await this.read(buf)
+                bufs.push(buf)
+                bytesRemaining -= maxUint32BigInt
+            }
+            else {
+                const buf = new Uint8Array(Number(bytesRemaining))
+                await this.read(buf)
+                bufs.push(buf)
+                bytesRemaining = 0n
+            }
+        }
+
+        return new Blob(bufs)
+    }
 }

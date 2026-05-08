@@ -64,6 +64,10 @@ class App {
     /** @type {RendererRegistry} */
     #registry
 
+    /**
+     * @param {HTMLElement} ohost
+     * @param {HTMLElement} phost
+     */
     constructor(ohost, phost) {
         this.#octetStreamHost = ohost
         this.#previewHost = phost
@@ -81,10 +85,13 @@ class App {
         }
 
         const registry = this.#registry
-        const [octetStream, noPreview, renderer] = await Promise.all([
+        const mimeType = mime.split('/')[0]
+        // const mimeSubype = mime.split('/')[1]
+        const [octetStream, noPreview, renderer, mimeRenderer] = await Promise.all([
             registry.get('application/octet-stream'),
             registry.get('nopreview'),
             registry.get(mime),
+            registry.get(mimeType),
         ])
 
         let stream1, stream2
@@ -107,11 +114,13 @@ class App {
 
             this.#currentPreviewNode.remove()
 
-            if (!renderer) {
+            const r = renderer || mimeRenderer
+
+            if (!r) {
                 node = noPreview.render(stream2)
             }
             else {
-                node = renderer.render(stream2)
+                node = r.render(stream2)
             }
 
             this.#currentPreviewNode = node

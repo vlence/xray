@@ -608,20 +608,26 @@ export default class QuickTimeRenderer extends Renderer {
             <tr>
                 <th scope="row">Color parameter type</th>
                 <td>${atom.colorParameterType}</td>
-            </tr>
-            <tr>
-                <th scope="row">Primaries index</th>
-                <td>${atom.primariesIndex}</td>
-            </tr>
-            <tr>
-                <th scope="row">Transfer function index</th>
-                <td>${atom.transferFunctionIndex}</td>
-            </tr>
-            <tr>
-                <th scope="row">Matrix index</th>
-                <td>${atom.matrixIndex}</td>
-            </tr>
-        </table>`
+            </tr>`
+
+        if (atom.colorParameterType == 'nclc') {
+            details.innerHTML += `
+                <tr>
+                    <th scope="row">Primaries index</th>
+                    <td>${atom.primariesIndex}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Transfer function index</th>
+                    <td>${atom.transferFunctionIndex}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Matrix index</th>
+                    <td>${atom.matrixIndex}</td>
+                </tr>
+            `
+        }
+
+        details.innerHTML += '</table>'
 
         atomElem.appendChild(details)
     }

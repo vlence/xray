@@ -29,6 +29,7 @@ import SdtpAtom from '../../quicktime/atom.sdtp.mjs'
 import CslgAtom from '../../quicktime/atom.cslg.mjs'
 import SmhdAtom from '../../quicktime/atom.smhd.mjs'
 import GminAtom from '../../quicktime/atom.gmin.mjs'
+import TcmiAtom from '../../quicktime/atom.tcmi.mjs'
 
 const log = console
 
@@ -73,6 +74,7 @@ export default class QuickTimeRenderer extends Renderer {
         this.atomDetailsRenderers['cslg'] = this.renderCslgAtomDetails.bind(this)
         this.atomDetailsRenderers['smhd'] = this.renderSmhdAtomDetails.bind(this)
         this.atomDetailsRenderers['gmin'] = this.renderGminAtomDetails.bind(this)
+        this.atomDetailsRenderers['tcmi'] = this.renderTcmiAtomDetails.bind(this)
         // this.atomDetailsRenderers['stsd'] = this.renderStsdAtomDetails.bind(this)
         
         for (const type of videoSampleTypes) {
@@ -292,6 +294,103 @@ export default class QuickTimeRenderer extends Renderer {
             <tr>
                 <th scope="row">Handler type</th>
                 <td>${atom.handlerType()}</td>
+            </tr>
+        </table>`
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {TcmiAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    renderTcmiAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Text font</th>
+                <td>${atom.textFont}</td>
+            </tr>
+            <tr>
+                <th scope="row">Text face</th>
+                <td>
+                    <label>
+                        <input type="checkbox" ${atom.textBold() ? 'checked' : ''} disabled>
+                        Bold
+                    </label>
+                    <br>
+                    <label>
+                        <input type="checkbox" ${atom.textItalic() ? 'checked' : ''} disabled>
+                        Italic
+                    </label>
+                    <br>
+                    <label>
+                        <input type="checkbox" ${atom.textUnderline() ? 'checked' : ''} disabled>
+                        Underline
+                    </label>
+                    <br>
+                    <label>
+                        <input type="checkbox" ${atom.textOutline() ? 'checked' : ''} disabled>
+                        Outline
+                    </label>
+                    <br>
+                    <label>
+                        <input type="checkbox" ${atom.textShadow() ? 'checked' : ''} disabled>
+                        Shadow
+                    </label>
+                    <br>
+                    <label>
+                        <input type="checkbox" ${atom.textCondense() ? 'checked' : ''} disabled>
+                        Condense
+                    </label>
+                    <br>
+                    <label>
+                        <input type="checkbox" ${atom.textExtend() ? 'checked' : ''} disabled>
+                        Extend
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Text size</th>
+                <td>${atom.textSize}</td>
+            </tr>
+            <tr>
+                <th scope="row">Text color</th>
+                <td>
+                    <label>
+                        <input type="color" value="#${atom.textColor.hex()}" disabled>
+                        R: ${atom.textColor.red}
+                        G: ${atom.textColor.green}
+                        B: ${atom.textColor.blue}
+                        [0x${atom.textColor.hex()}]
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Background color</th>
+                <td>
+                    <label>
+                        <input type="color" value="#${atom.backgroundColor.hex()}" disabled>
+                        R: ${atom.backgroundColor.red}
+                        G: ${atom.backgroundColor.green}
+                        B: ${atom.backgroundColor.blue}
+                        [0x${atom.backgroundColor.hex()}]
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Font name</th>
+                <td>${atom.fontName}</td>
             </tr>
         </table>`
 

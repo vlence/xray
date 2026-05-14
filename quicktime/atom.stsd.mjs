@@ -31,6 +31,10 @@ export const videoSampleTypes = [
     'v210', // Uncompressed Y´CbCr, 10-bit-per-component 4:2:2]
 ]
 
+export const timecodeSampleTypes = [
+    'tmcd',
+]
+
 const ascii = textDecoders.get('ascii')
 
 /**
@@ -94,6 +98,9 @@ export async function stsdAtomParser(reader, atomTemplate, scanner) {
 
         if (videoSampleTypes.includes(desc.type)) {
             desc = await parseVideoSampleDescription(reader, desc, scanner)
+        }
+        else if (timecodeSampleTypes.includes(desc.type)) {
+            desc = await parseTimecodeSampleDescription(reader, desc, scanner)
         }
         else {
             desc.data = await reader.readBlob(desc.getDataSize())
@@ -282,4 +289,76 @@ export class V0SoundSampleDescription extends SoundSampleDescription {
     compressionID
     packetSize
     sampleRate
+}
+
+export class TimecodeSampleDescription extends SampleDescriptionAtom {
+    /**
+     * @type {number}
+     */
+    flags
+
+    /**
+     * @type {number}
+     */
+    timeScale
+
+    /**
+     * @type {number}
+     */
+    frameDuration
+
+    /**
+     * @type {number}
+     */
+    numberOfFrames
+}
+
+/**
+ * Parses an stsd atom's data.
+ *
+ * @param {AtomByteReader} reader
+ * @param {SampleDescriptionAtom} desc
+ * @param {AtomScanner} scanner
+ */
+export async function parseTimecodeSampleDescription(reader, desc, scanner) {
+    const atom = new TimecodeSampleDescription()
+    atom.size = desc.size
+    atom.type = desc.type
+    atom.parent = desc.parent
+    atom.typeBytes = desc.typeBytes
+    atom.extendedSize = desc.extendedSize
+    atom.dataReferenceIndex = desc.dataReferenceIndex
+
+    let bytesRemaining = atom.getDataSize()
+
+    await reader.skip(4) // reserved
+    bytesRemaining -= 4
+
+    atom.flags = await reader.readUint32()
+    bytesRemaining -= 4
+
+    atom.timeScale = await reader.readUint32()
+    bytesRemaining -= 4
+
+    atom.frameDuration = await reader.readUint32()
+    bytesRemaining -= 4
+
+    atom.numberOfFrames = await reader.readUint8()
+    bytesRemaining -= 1
+
+    await reader.skip(1) // reserved
+    bytesRemaining -= 1
+
+    if (bytesRemaining > 0) {
+        for await (const nextAtom of scanner.withParent(atom)) {
+            atom.children.push(nextAtom)
+            bytesRemaining -= nextAtom.getSize()
+
+            if (bytesRemaining == 0) {
+                break
+            }
+        }
+    }
+
+    return atom
 }

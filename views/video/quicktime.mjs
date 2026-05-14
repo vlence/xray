@@ -27,6 +27,7 @@ import StsdAtom, { VideoSampleDescription, videoSampleTypes } from '../../quickt
 import ColrAtom from '../../quicktime/atom.colr.mjs'
 import SdtpAtom from '../../quicktime/atom.sdtp.mjs'
 import CslgAtom from '../../quicktime/atom.cslg.mjs'
+import SmhdAtom from '../../quicktime/atom.smhd.mjs'
 
 const log = console
 
@@ -69,6 +70,7 @@ export default class QuickTimeRenderer extends Renderer {
         this.atomDetailsRenderers['colr'] = this.renderColrAtomDetails.bind(this)
         this.atomDetailsRenderers['sdtp'] = this.renderSdtpAtomDetails.bind(this)
         this.atomDetailsRenderers['cslg'] = this.renderCslgAtomDetails.bind(this)
+        this.atomDetailsRenderers['smhd'] = this.renderSmhdAtomDetails.bind(this)
         // this.atomDetailsRenderers['stsd'] = this.renderStsdAtomDetails.bind(this)
         
         for (const type of videoSampleTypes) {
@@ -630,6 +632,32 @@ export default class QuickTimeRenderer extends Renderer {
         }
 
         details.innerHTML += '</table>'
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {SmhdAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    renderSmhdAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Balance</th>
+                <td>${atom.balance}</td>
+            </tr>
+        </table>`
 
         atomElem.appendChild(details)
     }

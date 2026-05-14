@@ -1,4 +1,4 @@
-import Atom from './atom.mjs'
+import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
@@ -9,7 +9,11 @@ import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
  *
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/partial_sync_sample_atom}
  */
-export default class StpsAtom extends Atom {
+export default class StpsAtom extends FullAtom {
+    /**
+     * @type {number[]}
+     */
+    samples = []
 }
 
 /**
@@ -26,6 +30,13 @@ export async function stpsAtomParser(reader, atomTemplate, scanner) {
     atom.typeBytes = atomTemplate.typeBytes
     atom.extendedSize = atomTemplate.extendedSize
     atom.parent = atomTemplate.parent
+    atom.versionAndFlags = await reader.readUint32()
+
+    const entries = await reader.readUint32()
+
+    for (let i = 0; i < entries; i++) {
+        atom.samples.push(await reader.readUint32())
+    }
 
     return atom
 }

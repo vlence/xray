@@ -1,5 +1,6 @@
 import QuickTimeParser from "../quicktime/parser.mjs"
 import { colrBoxParser } from "./box.colr.mjs"
+import { cslgBoxParser } from "./box.cslg.mjs"
 import { elstBoxParser } from "./box.elst.mjs"
 import { ftypBoxParser } from "./box.ftyp.mjs"
 import { keysBoxParser } from "./box.keys.mjs"
@@ -24,5 +25,6 @@ export default class MP4Parser extends QuickTimeParser {
         this.defineParser('elst', elstBoxParser)
         this.defineParser('keys', keysBoxParser)
         this.defineParser('colr', colrBoxParser)
+        this.defineParser('cslg', cslgBoxParser)
     }
 }

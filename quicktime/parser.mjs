@@ -54,6 +54,7 @@ import { cttsAtomParser } from './atom.ctts.mjs'
 import { cslgAtomParser } from './atom.cslg.mjs'
 import { stssAtomParser } from './atom.stss.mjs'
 import { stpsAtomParser } from './atom.stps.mjs'
+import { stscAtomParser } from './atom.stsc.mjs'
 
 const log = console
 
@@ -125,5 +126,6 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('cslg', cslgAtomParser)
         this.defineParser('stss', stssAtomParser)
         this.defineParser('stps', stpsAtomParser)
+        this.defineParser('stsc', stscAtomParser)
     }
 }

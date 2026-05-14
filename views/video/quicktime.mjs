@@ -26,6 +26,7 @@ import KeysAtom from '../../quicktime/atom.keys.mjs'
 import StsdAtom, { VideoSampleDescription, videoSampleTypes } from '../../quicktime/atom.stsd.mjs'
 import ColrAtom from '../../quicktime/atom.colr.mjs'
 import SdtpAtom from '../../quicktime/atom.sdtp.mjs'
+import CslgAtom from '../../quicktime/atom.cslg.mjs'
 
 const log = console
 
@@ -67,6 +68,7 @@ export default class QuickTimeRenderer extends Renderer {
         this.atomDetailsRenderers['keys'] = this.renderKeysAtomDetails.bind(this)
         this.atomDetailsRenderers['colr'] = this.renderColrAtomDetails.bind(this)
         this.atomDetailsRenderers['sdtp'] = this.renderSdtpAtomDetails.bind(this)
+        this.atomDetailsRenderers['cslg'] = this.renderCslgAtomDetails.bind(this)
         // this.atomDetailsRenderers['stsd'] = this.renderStsdAtomDetails.bind(this)
         
         for (const type of videoSampleTypes) {
@@ -628,6 +630,48 @@ export default class QuickTimeRenderer extends Renderer {
         }
 
         details.innerHTML += '</table>'
+
+        atomElem.appendChild(details)
+    }
+
+    /**
+     * @param {CslgAtom} atom
+     * @param {HTMLDetailsElement} atomElem
+     */
+    renderCslgAtomDetails(atom, atomElem) {
+        const details = document.createElement('table')
+        details.style.marginTop = '0.5em'
+
+        details.innerHTML = `<table>
+            <tr>
+                <th scope="row">Version</th>
+                <td>${atom.version()}</td>
+            </tr>
+            <tr>
+                <th scope="row">Flags</th>
+                <td>0x${atom.flags().toString(16).padStart(6, '0')}</td>
+            </tr>
+            <tr>
+                <th scope="row">Composition offset to display offset shift</th>
+                <td>${atom.compositionOffsetToDisplayOffsetShift}</td>
+            </tr>
+            <tr>
+                <th scope="row">Least display offset</th>
+                <td>${atom.leastDisplayOffset}</td>
+            </tr>
+            <tr>
+                <th scope="row">Greatest display offset</th>
+                <td>${atom.greatestDisplayOffset}</td>
+            </tr>
+            <tr>
+                <th scope="row">Display start time</th>
+                <td>${atom.displayStartTime}</td>
+            </tr>
+            <tr>
+                <th scope="row">Display end time</th>
+                <td>${atom.displayEndTime}</td>
+            </tr>
+        </table>`
 
         atomElem.appendChild(details)
     }

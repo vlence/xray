@@ -1,4 +1,3 @@
-import DrefAtom from './atom.dref.mjs'
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
@@ -14,13 +13,6 @@ const log = console
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/video_media_information_atom/data_information_atom}
  */
 export default class DinfAtom extends Atom {
-    /**
-     * Contains tabular data that instructs the data handler component
-     * how to access the media’s data.
-     *
-     * @type {DrefAtom}
-     */
-    dataReference
 }
 
 /**
@@ -39,16 +31,15 @@ export async function dinfAtomParser(reader, atomTemplate, scanner) {
     atom.extendedSize = atomTemplate.extendedSize
     atom.parent = atomTemplate.parent
 
-    const iter = scanner.withParent(atom)[Symbol.asyncIterator]()
-    const nextAtom = await iter.next().then(result => result.value)
+    let bytesRemaining = atom.getDataSize()
 
-    atom.children.push(nextAtom)
+    for await (const nextAtom of scanner.withParent(atom)) {
+        atom.children.push(nextAtom)
+        bytesRemaining -= nextAtom.getSize()
 
-    if (nextAtom instanceof DrefAtom) {
-        atom.dataReference = nextAtom
-    }
-    else {
-        log.warn('dinf: unexpected child atom ' + nextAtom.type)
+        if (bytesRemaining == 0) {
+            break
+        }
     }
 
     return atom

@@ -1,10 +1,5 @@
-import ElngAtom from './atom.elng.mjs'
-import { HdlrAtom } from './atom.hdlr.mjs'
-import MdhdAtom from './atom.mdhd.mjs'
-import MinfAtom from './atom.minf.mjs'
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
-import UdtaAtom from './atom.udta.mjs'
 
 const log = console
 
@@ -20,30 +15,6 @@ const log = console
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/media_atom}
  */
 export default class MdiaAtom extends Atom {
-    /**
-     * @type {MdhdAtom}
-     */
-    header
-
-    /**
-     * @type {ElngAtom}
-     */
-    extendedLanguageTag
-
-    /**
-     * @type {HdlrAtom}
-     */
-    handler
-
-    /**
-     * @type {MinfAtom}
-     */
-    mediaInformation
-
-    /**
-     * @type {UdtaAtom}
-     */
-    userData
 }
 
 /**
@@ -66,25 +37,6 @@ export async function mdiaAtomParser(reader, atomTemplate, scanner) {
     for await (const nextAtom of scanner.withParent(atom)) {
         atom.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
-
-        if (nextAtom instanceof UdtaAtom) {
-            atom.userData = nextAtom
-        }
-        else if (nextAtom instanceof MdhdAtom) {
-            atom.header = nextAtom
-        }
-        else if (nextAtom instanceof ElngAtom) {
-            atom.extendedLanguageTag = nextAtom
-        }
-        else if (nextAtom instanceof HdlrAtom) {
-            atom.handler = nextAtom
-        }
-        else if (nextAtom instanceof MinfAtom) {
-            atom.mediaInformation = nextAtom
-        }
-        else {
-            log.warn('mdia: unexpected child atom ' + nextAtom.type)
-        }
 
         if (bytesRemaining == 0) {
             break

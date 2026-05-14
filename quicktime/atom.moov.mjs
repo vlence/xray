@@ -1,9 +1,5 @@
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 import Atom from './atom.mjs'
-import MvhdAtom from './atom.mvhd.mjs'
-import TrakAtom from './atom.trak.mjs'
-import ClipAtom from './atom.clip.mjs'
-import UdtaAtom from './atom.udta.mjs'
 
 const log = console
 
@@ -32,17 +28,6 @@ const log = console
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/movie_atom}
  */
 export default class MoovAtom extends Atom {
-    /** @type {MvhdAtom} */
-    header
-
-    /** @type {ClipAtom} */
-    clipping
-
-    /** @type {TrakAtom[]} */
-    tracks = []
-
-    /** @type {UdtaAtom} */
-    userData
 }
 
 /**
@@ -66,19 +51,6 @@ export async function moovAtomParser(reader, atomTemplate, scanner) {
     for await (const nextAtom of scanner.withParent(atom)) {
         atom.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
-
-        if (nextAtom instanceof MvhdAtom) {
-            atom.header = nextAtom
-        }
-        else if (nextAtom instanceof TrakAtom) {
-            atom.tracks.push(nextAtom)
-        }
-        else if (nextAtom instanceof ClipAtom) {
-            atom.clipping = nextAtom
-        }
-        else if (nextAtom instanceof UdtaAtom) {
-            atom.userData = nextAtom
-        }
 
         if (bytesRemaining == 0) {
             break

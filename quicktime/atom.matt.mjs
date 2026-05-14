@@ -1,4 +1,3 @@
-import KmatAtom from './atom.kmat.mjs'
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
@@ -11,13 +10,6 @@ const log = console
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/track_matte_atom}
  */
 export default class MattAtom extends Atom {
-    /**
-     * Specifies the image description structure and the matte data
-     * associated with a particular matte atom.
-     *
-     * @type {KmatAtom}
-     */
-    kmat
 }
 
 /**
@@ -39,13 +31,6 @@ export async function mattAtomParser(reader, atomTemplate, scanner) {
     const nextAtom = await iter.next().then(result => result.value)
 
     atom.children.push(nextAtom)
-
-    if (nextAtom instanceof KmatAtom) {
-        atom.kmat = nextAtom
-    }
-    else {
-        log.warn('matt: unexpected atom ' + nextAtom.getTypeString())
-    }
 
     return atom
 }

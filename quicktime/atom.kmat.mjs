@@ -1,6 +1,5 @@
 import Atom, { FullAtom } from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
-import StsdAtom from './atom.stsd.mjs'
 
 const log = console
 
@@ -11,14 +10,6 @@ const log = console
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/compressed_matte_atom}
  */
 export default class KmatAtom extends FullAtom {
-
-    /**
-     * An image description structure associated with this matte data.
-     * This should be interpreted as a video sample description.
-     *
-     * @type {StsdAtom}
-     */
-    matteImageDescription
 
     /**
      * The compressed matte data.
@@ -52,13 +43,6 @@ export async function kmatAtomParser(reader, atomTemplate, scanner) {
 
     atom.children.push(nextAtom)
     bytesRemaining -= nextAtom.getSize()
-
-    if (nextAtom instanceof StsdAtom) {
-        atom.videoSampleDescription = nextAtom
-    }
-    else {
-        log.warn('kmat: unexpected atom ' + nextAtom.getTypeString())
-    }
 
     atom.matteData = await reader.readBlob(bytesRemaining)
 

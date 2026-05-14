@@ -1,7 +1,4 @@
-import ClefAtom from './atom.clef.mjs'
-import EnofAtom from './atom.enof.mjs'
 import Atom from './atom.mjs'
-import ProfAtom from './atom.prof.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
 /**
@@ -10,20 +7,6 @@ import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/track_aperture_mode_dimensions_atom}
  */
 export default class TaptAtom extends Atom {
-    /**
-     * @type {ClefAtom}
-     */
-    clef
-
-    /**
-     * @type {ProfAtom}
-     */
-    prof
-
-    /**
-     * @type {EnofAtom}
-     */
-    enof
 }
 
 /**
@@ -46,19 +29,6 @@ export async function taptAtomParser(reader, atomTemplate, scanner) {
     for await (const nextAtom of scanner.withParent(atom)) {
         atom.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
-
-        if (nextAtom instanceof ClefAtom) {
-            atom.clef = nextAtom
-        }
-        else if (nextAtom instanceof ProfAtom) {
-            atom.prof = nextAtom
-        }
-        else if (nextAtom instanceof EnofAtom) {
-            atom.enof = nextAtom
-        }
-        else {
-            throw new Error(`unexpected atom ${nextAtom.getTypeString()} [${nextAtom.type.join(',')}]`)
-        }
 
         if (bytesRemaining == 0) {
             break

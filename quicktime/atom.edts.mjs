@@ -1,4 +1,3 @@
-import ElstAtom from './atom.elst.mjs'
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
@@ -20,13 +19,6 @@ const log = console
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/edit_atom}
  */
 export default class EdtsAtom extends Atom {
-    /**
-     * An atom that maps from a time in a movie to a time in a media,
-     * and ultimately to media data.
-     *
-     * @type {ElstAtom}
-     */
-    editList
 }
 
 /**
@@ -49,14 +41,6 @@ export async function edtsAtomParser(reader, atomTemplate, scanner) {
     for await (const nextAtom of scanner.withParent(atom)) {
         atom.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
-
-        if (nextAtom instanceof ElstAtom) {
-            atom.editList = nextAtom
-            break
-        }
-        else {
-            log.warn('edts: unexpected atom ' + nextAtom.type)
-        }
 
         if (bytesRemaining == 0) {
             break

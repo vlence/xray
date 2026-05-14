@@ -1,4 +1,3 @@
-import CrgnAtom from './atom.crgn.mjs'
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
 
@@ -8,10 +7,6 @@ import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/clipping_atom}
  */
 export default class ClipAtom extends Atom {
-    /**
-     * @type {CrgnAtom}
-     */
-    crgn
 }
 
 /**
@@ -34,13 +29,6 @@ export async function clipAtomParser(reader, atomTemplate, scanner) {
     for await (const nextAtom of scanner.withParent(atom)) {
         atom.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
-
-        if (nextAtom instanceof CrgnAtom) {
-            atom.crgn = nextAtom
-        }
-        else {
-            log.warn('clip: unexpected child atom', nextAtom)
-        }
 
         if (bytesRemaining == 0) {
             break

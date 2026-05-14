@@ -1,8 +1,5 @@
-import DinfAtom from './atom.dinf.mjs'
-import { HdlrAtom } from './atom.hdlr.mjs'
 import Atom from './atom.mjs'
 import AtomScanner, { AtomByteReader } from './atom.scanner.mjs'
-import VmhdAtom from './atom.vmhd.mjs'
 
 const log = console
 
@@ -21,26 +18,6 @@ const log = console
  * @see {@link https://developer.apple.com/documentation/quicktime-file-format/media_information_atoms}
  */
 export default class MinfAtom extends Atom {
-    /**
-     * Defines specific color and graphics mode information.
-     *
-     * @type {VmhdAtom}
-     */
-    videoMediaInformationHeader
-
-    /**
-     * @type {HdlrAtom}
-     */
-    handler
-
-    /**
-     * Specifies the data handler component that provides access to the
-     * media data.
-     *
-     * @type {DinfAtom}
-     */
-    dataInformation
-    sampleTable
 }
 
 /**
@@ -63,19 +40,6 @@ export async function minfAtomParser(reader, atomTemplate, scanner) {
     for await (const nextAtom of scanner.withParent(atom)) {
         atom.children.push(nextAtom)
         bytesRemaining -= nextAtom.getSize()
-
-        if (nextAtom instanceof HdlrAtom) {
-            atom.handler = nextAtom
-        }
-        else if (nextAtom instanceof VmhdAtom) {
-            atom.videoMediaInformationHeader = nextAtom
-        }
-        else if (nextAtom instanceof DinfAtom) {
-            atom.dataInformation = nextAtom
-        }
-        else {
-            log.warn('minf: unexpected child atom ' + nextAtom.type)
-        }
 
         if (bytesRemaining == 0) {
             break

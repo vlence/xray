@@ -60,6 +60,7 @@ import { stcoAtomParser } from './atom.stco.mjs'
 import { co64AtomParser } from './atom.co64.mjs'
 import { smhdAtomParser } from './atom.smhd.mjs'
 import { gmhdAtomParser } from './atom.gmhd.mjs'
+import { gminAtomParser } from './atom.gmin.mjs'
 
 const log = console
 
@@ -137,5 +138,6 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('co64', co64AtomParser)
         this.defineParser('smhd', smhdAtomParser)
         this.defineParser('gmhd', gmhdAtomParser)
+        this.defineParser('gmin', gminAtomParser)
     }
 }

@@ -63,6 +63,7 @@ import { gmhdAtomParser } from './atom.gmhd.mjs'
 import { gminAtomParser } from './atom.gmin.mjs'
 import { tcmiAtomParser } from './atom.tcmi.mjs'
 import { tmcdAtomParser } from './atom.tmcd.mjs'
+import { waveAtomParser } from './atom.wave.mjs'
 
 const log = console
 
@@ -143,5 +144,6 @@ export default class QuickTimeParser extends AtomScanner {
         this.defineParser('gmin', gminAtomParser)
         this.defineParser('tcmi', tcmiAtomParser)
         this.defineParser('tmcd', tmcdAtomParser)
+        this.defineParser('wave', waveAtomParser)
     }
 }

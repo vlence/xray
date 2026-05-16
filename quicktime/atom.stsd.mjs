@@ -35,6 +35,32 @@ export const timecodeSampleTypes = [
     'tmcd',
 ]
 
+export const soundSampleTypes = [
+    '\x00\x00\x00\x00',
+    'NONE',
+    'raw ',
+    'twos',
+    'sowt',
+    'MAC3',
+    'MAC6',
+    'ima4',
+    'fl32',
+    'fl64',
+    'in24',
+    'ulaw',
+    'alaw',
+    '\x6D\x73\x00\x02',
+    '\x6D\x73\x00\x11',
+    'dvca',
+    'QDMC',
+    'QDM2',
+    'Qclp',
+    '\x6D\x73\x00\x55',
+    '.mp3',
+    'mp4a',
+    'ac-3',
+]
+
 const ascii = textDecoders.get('ascii')
 
 /**
@@ -101,6 +127,9 @@ export async function stsdAtomParser(reader, atomTemplate, scanner) {
         }
         else if (timecodeSampleTypes.includes(desc.type)) {
             desc = await parseTimecodeSampleDescription(reader, desc, scanner)
+        }
+        else if (soundSampleTypes.includes(desc.type)) {
+            desc = await parseSoundSampleDescription(reader, desc, scanner)
         }
         else {
             desc.data = await reader.readBlob(desc.getDataSize())
@@ -283,12 +312,192 @@ export class SoundSampleDescription extends SampleDescriptionAtom {
     vendor
 }
 
+/**
+ * Parses an stsd atom's data.
+ *
+ * @param {AtomByteReader} reader
+ * @param {SampleDescriptionAtom} desc
+ * @param {AtomScanner} scanner
+ */
+export async function parseSoundSampleDescription(reader, desc, scanner) {
+    let atom = new SoundSampleDescription()
+    atom.size = desc.size
+    atom.type = desc.type
+    atom.parent = desc.parent
+    atom.typeBytes = desc.typeBytes
+    atom.extendedSize = desc.extendedSize
+    atom.dataReferenceIndex = desc.dataReferenceIndex
+
+    let bytesRemaining = atom.getDataSize()
+
+    atom.version = await reader.readUint16()
+    bytesRemaining -= 2
+
+    atom.revisionLevel = await reader.readUint16()
+    bytesRemaining -= 2
+
+    atom.vendor = await reader.readUint32()
+    bytesRemaining -= 4
+
+    if (atom.version == 2) {
+        atom = await parseV2SoundSampleDescription(reader, atom, scanner)
+    }
+    else {
+        atom.data = await reader.readBlob(bytesRemaining)
+    }
+
+    return atom
+}
+
 export class V0SoundSampleDescription extends SoundSampleDescription {
     numberOfChannels
     sampleSize
     compressionID
     packetSize
     sampleRate
+}
+
+export class V2SoundSampleDescription extends SoundSampleDescription {
+    /**
+     * @type {number}
+     */
+    always3
+
+    /**
+     * @type {number}
+     */
+    always16
+
+    /**
+     * @type {number}
+     */
+    alwaysMinus2
+
+    /**
+     * @type {number}
+     */
+    always0
+
+    /**
+     * @type {number}
+     */
+    always65536
+
+    /**
+     * @type {number}
+     */
+    sizeOfStructOnly
+
+    /**
+     * @type {number}
+     */
+    numAudioChannels
+
+    /**
+     * @type {number}
+     */
+    always7F000000
+
+    /**
+     * @type {number}
+     */
+    constBitsPerChannel
+
+    /**
+     * @type {number}
+     */
+    formatSpecificFlags
+
+    /**
+     * @type {number}
+     */
+    constBytesPerAudioPacket
+
+    /**
+     * @type {number}
+     */
+    constLPCMFramesPerAudioPacket
+}
+
+/**
+ * Parses an stsd atom's data.
+ *
+ * @param {AtomByteReader} reader
+ * @param {SoundSampleDescription} desc
+ * @param {AtomScanner} scanner
+ */
+export async function parseV2SoundSampleDescription(reader, desc, scanner) {
+    const atom = new V2SoundSampleDescription()
+    atom.size = desc.size
+    atom.type = desc.type
+    atom.parent = desc.parent
+    atom.typeBytes = desc.typeBytes
+    atom.extendedSize = desc.extendedSize
+    atom.dataReferenceIndex = desc.dataReferenceIndex
+
+    let bytesRemaining = atom.getDataSize()
+
+    atom.version = desc.version
+    bytesRemaining -= 2
+
+    atom.revisionLevel = desc.revisionLevel
+    bytesRemaining -= 2
+
+    atom.vendor = desc.vendor
+    bytesRemaining -= 4
+
+    atom.always3 = await reader.readInt16()
+    bytesRemaining -= 2
+
+    atom.always16 = await reader.readInt16()
+    bytesRemaining -= 2
+
+    atom.alwaysMinus2 = await reader.readInt16()
+    bytesRemaining -= 2
+
+    atom.always0 = await reader.readInt16()
+    bytesRemaining -= 2
+
+    atom.always65536 = await reader.readInt32()
+    bytesRemaining -= 4
+
+    atom.sizeOfStructOnly = await reader.readUint32()
+    bytesRemaining -= 4
+
+    atom.numAudioChannels = await reader.readUint32()
+    bytesRemaining -= 4
+
+    await reader.skip(8)
+    bytesRemaining -= 8
+
+    atom.always7F000000 = await reader.readInt32()
+    bytesRemaining -= 4
+
+    atom.constBitsPerChannel = await reader.readUint32()
+    bytesRemaining -= 4
+
+    atom.formatSpecificFlags = await reader.readUint32()
+    bytesRemaining -= 4
+
+    atom.constBytesPerAudioPacket = await reader.readUint32()
+    bytesRemaining -= 4
+
+    atom.constLPCMFramesPerAudioPacket = await reader.readUint32()
+    bytesRemaining -= 4
+
+    if (bytesRemaining > 0) {
+        // atom.data = await reader.readBlob(bytesRemaining)
+        for await (const nextAtom of scanner.withParent(atom)) {
+            atom.children.push(nextAtom)
+            bytesRemaining -= nextAtom.getSize()
+
+            if (bytesRemaining == 0) {
+                break
+            }
+        }
+    }
+    
+    return atom
 }
 
 export class TimecodeSampleDescription extends SampleDescriptionAtom {
